@@ -1,0 +1,9 @@
+/.idea
+/target
+/vast-api-java-client.iml
+.DS_Store
+*~
+*.log
+*.authtoken
+/out
+junit-4.7.jar
