@@ -13,10 +13,16 @@ import com.iobeam.api.http.StatusCode;
 import com.iobeam.api.resource.ResourceException;
 import com.iobeam.api.resource.ResourceMapper;
 import com.iobeam.util.concurrent.SameThreadExecutorService;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.CookieManager;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;

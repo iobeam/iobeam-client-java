@@ -1,12 +1,15 @@
 package com.iobeam.api.resource;
 
 import com.iobeam.api.resource.util.Util;
+
 import org.json.JSONObject;
 import org.junit.Test;
 
 import java.util.Date;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class DeviceTest {
 
@@ -14,12 +17,12 @@ public class DeviceTest {
     private static final String TEST_DATE_STRING = "2015-03-01 20:55:21-0400";
 
     private static final String jsonDevice = "{\n"
-            + "     \"device_id\": \"" + TEST_DEVICE_ID + "\",\n"
-            + "     \"project_id\": 1000,\n"
-            + "     \"device_name\": \"java_test_ex\",\n"
-            + "     \"device_type\": \"java_test\",\n"
-            + "     \"created\": \"" + TEST_DATE_STRING +"\"\n"
-            + "}";
+                                             + "     \"device_id\": \"" + TEST_DEVICE_ID + "\",\n"
+                                             + "     \"project_id\": 1000,\n"
+                                             + "     \"device_name\": \"java_test_ex\",\n"
+                                             + "     \"device_type\": \"java_test\",\n"
+                                             + "     \"created\": \"" + TEST_DATE_STRING + "\"\n"
+                                             + "}";
 
     @Test
     public void testFromJson() throws Exception {

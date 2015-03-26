@@ -12,8 +12,9 @@ import com.iobeam.api.resource.DeviceList;
 import java.util.Date;
 
 /**
- * Devices service API. This API is for managing devices in the Cerebriq backend. It can be used to add new devices to
- * projects, remove devices, get all the devices currently in a project, and get a particular device.
+ * Devices service API. This API is for managing devices in the Cerebriq backend. It can be used to
+ * add new devices to projects, remove devices, get all the devices currently in a project, and get
+ * a particular device.
  */
 public class Devices {
 
@@ -58,8 +59,8 @@ public class Devices {
 
         protected GetDevice(final String deviceId) {
             super(client, RequestMethod.GET,
-                    PATH + "/" + deviceId,
-                    StatusCode.OK, Device.class);
+                  PATH + "/" + deviceId,
+                  StatusCode.OK, Device.class);
         }
     }
 
@@ -81,22 +82,24 @@ public class Devices {
 
         protected Add(Device request) {
             super(client, RequestMethod.POST, PATH,
-                    ContentType.JSON, request,
-                    StatusCode.CREATED, Device.Id.class);
+                  ContentType.JSON, request,
+                  StatusCode.CREATED, Device.Id.class);
         }
     }
 
     /**
      * Creates an Add API request for a new Device with the provided data.
      *
-     * @param projectId Project this device belongs to [required].
-     * @param deviceId Desired device ID. If invalid or <tt>null</tt>, a random one will be generated.
+     * @param projectId  Project this device belongs to [required].
+     * @param deviceId   Desired device ID. If invalid or <tt>null</tt>, a random one will be
+     *                   generated.
      * @param deviceName Project-unique name (optional).
      * @param deviceType Device type description (optional).
-     * @param created Creation date for this date; if null, current time will be used.
+     * @param created    Creation date for this date; if null, current time will be used.
      * @return An Add API request that can be executed to add the device to the project.
      */
-    public Add add(long projectId, String deviceId, String deviceName, String deviceType, Date created) {
+    public Add add(long projectId, String deviceId, String deviceName, String deviceType,
+                   Date created) {
         Date date = created == null ? new Date(System.currentTimeMillis()) : created;
         Device req = new Device(deviceId, projectId, deviceName, deviceType, date);
         return new Add(req);
@@ -107,8 +110,8 @@ public class Devices {
 
         protected Delete(final String deviceId) {
             super(client, RequestMethod.DELETE,
-                    PATH + "/" + deviceId,
-                    StatusCode.NO_CONTENT, Void.class);
+                  PATH + "/" + deviceId,
+                  StatusCode.NO_CONTENT, Void.class);
         }
     }
 

@@ -1,6 +1,7 @@
 package com.iobeam.api.auth;
 
 import com.iobeam.api.resource.util.Util;
+
 import org.json.JSONObject;
 
 import java.text.ParseException;
@@ -47,8 +48,8 @@ public class ProjectBearerAuthToken extends AuthToken {
     public static ProjectBearerAuthToken fromJson(final JSONObject json) throws ParseException {
         Date expires = Util.DATE_FORMAT.parse(json.getString("expires"));
         return new ProjectBearerAuthToken(json.getLong("project_id"),
-                                   json.getString("token"),
-                                   expires);
+                                          json.getString("token"),
+                                          expires);
     }
 
     @Override

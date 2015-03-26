@@ -6,8 +6,8 @@ import java.io.Serializable;
 import java.text.ParseException;
 
 /**
- * A resource representing a data point in a time series. This is represented by a timestamp and a value that is either
- * an integer (64-bits), a double, or a String.
+ * A resource representing a data point in a time series. This is represented by a timestamp and a
+ * value that is either an integer (64-bits), a double, or a String.
  */
 public class DataPoint implements Serializable {
 
@@ -21,6 +21,7 @@ public class DataPoint implements Serializable {
 
     /**
      * Constructor for a point containing integer data
+     *
      * @param time Timestamp of the data point (in milliseconds)
      * @param data Data in 64-bit integer form
      */
@@ -33,6 +34,7 @@ public class DataPoint implements Serializable {
 
     /**
      * Constructor for a point containing double data
+     *
      * @param time Timestamp of the data point (in milliseconds)
      * @param data Data in double/float form
      */
@@ -45,6 +47,7 @@ public class DataPoint implements Serializable {
 
     /**
      * Constructor for a point containing String data
+     *
      * @param time Timestamp of the data point (in milliseconds)
      * @param data Data in String form
      */
@@ -57,6 +60,7 @@ public class DataPoint implements Serializable {
 
     /**
      * Constructor for a point containing integer data at the current time.
+     *
      * @param data Data in 64-bit integer form
      */
     public DataPoint(long data) {
@@ -65,6 +69,7 @@ public class DataPoint implements Serializable {
 
     /**
      * Constructor for a point containing double data at the current time.
+     *
      * @param data Data in double/float form
      */
     public DataPoint(double data) {
@@ -73,6 +78,7 @@ public class DataPoint implements Serializable {
 
     /**
      * Constructor for a point containing String data at the current time.
+     *
      * @param data Data in String form
      */
     public DataPoint(String data) {
@@ -84,12 +90,13 @@ public class DataPoint implements Serializable {
     }
 
     public Object getValue() {
-        if (longData != null)
+        if (longData != null) {
             return longData;
-        else if (doubleData != null)
+        } else if (doubleData != null) {
             return doubleData;
-        else
+        } else {
             return stringData;
+        }
     }
 
     public static DataPoint fromJson(final JSONObject json) throws ParseException {
@@ -99,19 +106,21 @@ public class DataPoint implements Serializable {
             return new DataPoint(timestamp, json.getLong(KEY_VALUE));
         } else if (value instanceof Double || value instanceof Float) {
             return new DataPoint(timestamp, json.getDouble(KEY_VALUE));
-        } else
+        } else {
             return new DataPoint(timestamp, json.getString(KEY_VALUE));
+        }
     }
 
     public JSONObject toJson() {
         JSONObject ret = new JSONObject();
         ret.put(KEY_TIME, time);
-        if (longData != null)
+        if (longData != null) {
             ret.put(KEY_VALUE, longData);
-        else if (doubleData != null)
+        } else if (doubleData != null) {
             ret.put(KEY_VALUE, doubleData);
-        else
+        } else {
             ret.put(KEY_VALUE, stringData);
+        }
 
         return ret;
     }
@@ -123,22 +132,25 @@ public class DataPoint implements Serializable {
 
     @Override
     public boolean equals(Object object) {
-        if (object == null || !(object instanceof DataPoint))
+        if (object == null || !(object instanceof DataPoint)) {
             return false;
+        }
         DataPoint that = (DataPoint) object;
         return this.time == that.time && this.longData.equals(that.longData)
-                && this.doubleData.equals(that.doubleData) && this.stringData.equals(that.stringData);
+               && this.doubleData.equals(that.doubleData) && this.stringData
+            .equals(that.stringData);
     }
 
     @Override
     public String toString() {
         String dataStr;
-        if (longData != null)
+        if (longData != null) {
             dataStr = KEY_VALUE + "=" + longData;
-        else if (doubleData != null)
+        } else if (doubleData != null) {
             dataStr = KEY_VALUE + "=" + doubleData;
-        else
+        } else {
             dataStr = KEY_VALUE + "='" + stringData + "'";
+        }
         return "DataPoint{" +
                "time=" + time +
                ", " + dataStr +

@@ -2,6 +2,7 @@ package com.iobeam.api.resource;
 
 import com.iobeam.api.resource.annotations.JsonProperty;
 import com.iobeam.api.resource.util.Util;
+
 import org.json.JSONObject;
 
 import java.io.Serializable;
@@ -17,6 +18,7 @@ public class Device implements Serializable {
      * A wrapper class around a String that uniquely identifies the device.
      */
     public static final class Id implements Serializable {
+
         private final String id;
 
         public Id(String id) {
@@ -28,7 +30,7 @@ public class Device implements Serializable {
         }
 
         public static Device.Id fromJson(final JSONObject json)
-                throws ParseException {
+            throws ParseException {
             return new Device.Id(json.getString("device_id"));
         }
 
@@ -93,7 +95,7 @@ public class Device implements Serializable {
     }
 
     public static Device fromJson(final JSONObject json)
-            throws ParseException {
+        throws ParseException {
         String id = json.getString("device_id");
         long projectId = json.getLong("project_id");
         String name = json.optString("device_name");
@@ -105,11 +107,11 @@ public class Device implements Serializable {
     @Override
     public String toString() {
         return "Device{" +
-                "id='" + id.getId() + "'" +
-                ", projectId=" + projectId +
-                ", name='" + name + "'" +
-                ", type='" + type + "'" +
-                ", created=" + (created != null ? Util.DATE_FORMAT.format(created) : null) +
+               "id='" + id.getId() + "'" +
+               ", projectId=" + projectId +
+               ", name='" + name + "'" +
+               ", type='" + type + "'" +
+               ", created=" + (created != null ? Util.DATE_FORMAT.format(created) : null) +
                '}';
     }
 }

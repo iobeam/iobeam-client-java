@@ -5,7 +5,13 @@ import org.json.JSONObject;
 
 import java.io.Serializable;
 import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * A resource representing an import request resource for IOBeam.
@@ -19,7 +25,8 @@ public class Import implements Serializable {
 
     /**
      * Creates a new Import object for a particular device and project.
-     * @param deviceId Device ID this data is for
+     *
+     * @param deviceId  Device ID this data is for
      * @param projectId Project ID this data is for
      */
     public Import(String deviceId, long projectId) {
@@ -37,6 +44,7 @@ public class Import implements Serializable {
 
     /**
      * Gets a mapping from series to an unordered set of DataPoints.
+     *
      * @return Mapping from a series name to unordered set of data.
      */
     public Map<String, Set<DataPoint>> getSources() {
@@ -45,6 +53,7 @@ public class Import implements Serializable {
 
     /**
      * Gets the unordered set of data associated with a series.
+     *
      * @param label The name of the series to get
      * @return Set of unordered data for that series.
      */
@@ -54,7 +63,9 @@ public class Import implements Serializable {
 
     /**
      * Adds a new data point to a particular series.
-     * @param series The series this data point should be added to. If it doesn't exist, it will be created.
+     *
+     * @param series    The series this data point should be added to. If it doesn't exist, it will
+     *                  be created.
      * @param dataPoint Data to be added.
      */
     public void addDataPoint(String series, DataPoint dataPoint) {
@@ -68,6 +79,7 @@ public class Import implements Serializable {
 
     /**
      * Custom serialization method for this object to JSON.
+     *
      * @param out In-out parameter that maps JSON keys to their values.
      * @return A JSONObject representing this object.
      */
@@ -84,8 +96,9 @@ public class Import implements Serializable {
             JSONObject temp = new JSONObject();
             temp.put("name", k);
             JSONArray dataArr = new JSONArray();
-            for (DataPoint d : sources.get(k))
+            for (DataPoint d : sources.get(k)) {
                 dataArr.put(d.toJson());
+            }
             temp.put("data", dataArr);
             sourcesArr.put(temp);
         }

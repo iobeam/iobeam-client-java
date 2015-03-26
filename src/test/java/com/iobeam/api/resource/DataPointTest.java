@@ -3,26 +3,27 @@ package com.iobeam.api.resource;
 import org.json.JSONObject;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class DataPointTest {
 
     private static final String jsonDataPoint = "{\n"
-            + "     \"time\": 123456789,\n"
-            + "     \"value\": 100\n"
-            + "}";
+                                                + "     \"time\": 123456789,\n"
+                                                + "     \"value\": 100\n"
+                                                + "}";
 
 
     private static final String jsonDataPoint2 = "{\n"
-            + "     \"time\": 123456789,\n"
-            + "     \"value\": 100.51\n"
-            + "}";
+                                                 + "     \"time\": 123456789,\n"
+                                                 + "     \"value\": 100.51\n"
+                                                 + "}";
 
 
     private static final String jsonDataPoint3 = "{\n"
-            + "     \"time\": 123456789,\n"
-            + "     \"value\": \"110\"\n"
-            + "}";
+                                                 + "     \"time\": 123456789,\n"
+                                                 + "     \"value\": \"110\"\n"
+                                                 + "}";
 
     @Test
     public void testFromJson() throws Exception {

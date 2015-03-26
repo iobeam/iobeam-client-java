@@ -7,16 +7,18 @@ import org.junit.Test;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class ImportTest {
 
     private static final String TEST_DEVICE_ID = "test1234only5678";
 
     private static final String jsonDataPoint = "{\n"
-            + "     \"time\": 123456789,\n"
-            + "     \"value\": 100\n"
-            + "}";
+                                                + "     \"time\": 123456789,\n"
+                                                + "     \"value\": 100\n"
+                                                + "}";
 
     @Test
     public void testCreate() throws Exception {

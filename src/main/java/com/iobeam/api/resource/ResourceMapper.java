@@ -5,6 +5,7 @@ import com.iobeam.api.client.RestError;
 import com.iobeam.api.resource.annotations.JsonIgnore;
 import com.iobeam.api.resource.annotations.JsonProperty;
 import com.iobeam.api.resource.util.Util;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -62,7 +63,6 @@ public class ResourceMapper {
         final Class clazz = resource.getClass();
         final Method[] methods = clazz.getDeclaredMethods();
         final JSONObject json = new JSONObject();
-
 
         if (clazz.equals(Import.class)) {
             ((Import) resource).serialize(out);

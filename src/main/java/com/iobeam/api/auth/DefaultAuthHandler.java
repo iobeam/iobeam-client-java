@@ -31,24 +31,25 @@ public class DefaultAuthHandler extends AbstractAuthHandler {
     public DefaultAuthHandler(final RestClient client,
                               final long projectId,
                               final String projectToken) {
-        this(client, projectId, projectToken, String.format(FMT_DEFAULT_PATH,  projectId));
+        this(client, projectId, projectToken, String.format(FMT_DEFAULT_PATH, projectId));
     }
 
 
     public DefaultAuthHandler(final String apiServer,
                               final long projectId,
                               final String projectToken) {
-        this(new RestClient(apiServer), projectId, projectToken, String.format(FMT_DEFAULT_PATH,  projectId));
+        this(new RestClient(apiServer), projectId, projectToken,
+             String.format(FMT_DEFAULT_PATH, projectId));
     }
 
     public DefaultAuthHandler(final long projectId,
                               final String projectToken) {
-        this(new RestClient(), projectId, projectToken, String.format(FMT_DEFAULT_PATH,  projectId));
+        this(new RestClient(), projectId, projectToken, String.format(FMT_DEFAULT_PATH, projectId));
     }
 
     @Override
     public AuthToken refreshToken() throws IOException, ApiException {
         return new ProjectBearerAuthToken(projectId, projectToken, new Date(
-                System.currentTimeMillis() + TimeUnit.DAYS.toMillis(30)));
+            System.currentTimeMillis() + TimeUnit.DAYS.toMillis(30)));
     }
 }

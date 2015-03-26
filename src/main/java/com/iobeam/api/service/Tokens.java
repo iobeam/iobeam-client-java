@@ -27,7 +27,7 @@ public class Tokens {
 
         public GetUserToken(String username, String password) {
             super(client, RequestMethod.GET, PATH,
-                      StatusCode.OK, UserBearerAuthToken.class);
+                  StatusCode.OK, UserBearerAuthToken.class);
             getBuilder().addParameter("name", username);
             getBuilder().addParameter("password", password);
         }
@@ -44,7 +44,7 @@ public class Tokens {
 
         public GetProjectToken(long projectId, boolean read, boolean write, boolean admin) {
             super(client, RequestMethod.GET, PATH,
-                    StatusCode.OK, ProjectBearerAuthToken.class);
+                  StatusCode.OK, ProjectBearerAuthToken.class);
             getBuilder().addParameter("project_id", projectId);
             getBuilder().addParameter("read", read);
             getBuilder().addParameter("write", write);
@@ -52,7 +52,8 @@ public class Tokens {
         }
     }
 
-    public GetProjectToken getProjectToken(long projectId, boolean read, boolean write, boolean admin) {
+    public GetProjectToken getProjectToken(long projectId, boolean read, boolean write,
+                                           boolean admin) {
         return new GetProjectToken(projectId, read, write, admin);
     }
 }
