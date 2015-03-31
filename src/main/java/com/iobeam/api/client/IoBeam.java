@@ -6,7 +6,7 @@ import java.util.concurrent.Executors;
 
 /**
  * The IoBeam client. An instance of this is initialized with <tt>init()</tt> for a particular
- * project. This instance is passed to services (e.g. Imports).
+ * project. This instance is passed to services (for example, Imports).
  */
 public class IoBeam {
 
