@@ -1,6 +1,6 @@
 package com.iobeam.api.service;
 
-import com.iobeam.api.client.IoBeam;
+import com.iobeam.api.client.Iobeam;
 import com.iobeam.api.client.RestClient;
 import com.iobeam.api.client.RestRequest;
 import com.iobeam.api.http.ContentType;
@@ -21,7 +21,7 @@ public class Devices {
     private static final String PATH = "/v1/devices";
     private final RestClient client;
 
-    public Devices(final IoBeam client) {
+    public Devices(final Iobeam client) {
         this.client = client.getRestClient();
     }
 

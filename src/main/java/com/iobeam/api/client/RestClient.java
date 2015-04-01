@@ -8,7 +8,6 @@ import com.iobeam.api.auth.AuthToken;
 import com.iobeam.api.auth.UserBearerAuthToken;
 import com.iobeam.api.http.ContentType;
 import com.iobeam.api.http.RequestBuilder;
-import com.iobeam.api.http.RequestMethod;
 import com.iobeam.api.http.StatusCode;
 import com.iobeam.api.resource.ResourceException;
 import com.iobeam.api.resource.ResourceMapper;
@@ -41,8 +40,8 @@ import java.util.zip.GZIPInputStream;
 public class RestClient {
 
     protected final static Logger logger = Logger.getLogger(RestClient.class.getName());
-    public static final String DEFAULT_DEV_API_HOST = "https://api-dev.watchvast.com";
-    public static final String DEFAULT_API_HOST = "https://api.watchvast.com";
+    public static final String DEFAULT_DEV_API_HOST = "https://api-dev.iobeam.com";
+    public static final String DEFAULT_API_HOST = "https://api.iobeam.com";
     private static final int MAX_HTTP_RETRIES = 3;
     private static final int DEFAULT_MAX_AUTH_ATTEMPTS = 3;
     private final URL url;
@@ -53,78 +52,41 @@ public class RestClient {
         new AtomicReference<AuthHandler>(null);
     private AtomicReference<AuthToken> authToken = new AtomicReference<AuthToken>(null);
     private volatile int maxAuthAttempts = DEFAULT_MAX_AUTH_ATTEMPTS;
-    private final OfflineManager offlineManager;
     private volatile boolean enableGzip = true;
 
     public RestClient() {
         // Executor that executes on the calling thread.
-        this(new SameThreadExecutorService());
+        this(DEFAULT_API_HOST, null, new SameThreadExecutorService());
     }
 
     public RestClient(final String url) {
-        // Executor that executes on the calling thread.
-        this(url, new SameThreadExecutorService());
+        this(url, null, new SameThreadExecutorService());
     }
 
     public RestClient(final CookieManager manager) {
         // Executor that executes on the calling thread.
-        this(DEFAULT_API_HOST, manager, new SameThreadExecutorService(), null);
-    }
-
-    public RestClient(final CookieManager manager,
-                      final OfflineManager offlineManager) {
-        // Executor that executes on the calling thread.
-        this(DEFAULT_API_HOST, manager, new SameThreadExecutorService(), offlineManager);
-    }
-
-    public RestClient(final OfflineManager offlineManager) {
-        // Executor that executes on the calling thread.
-        this(DEFAULT_API_HOST, null, new SameThreadExecutorService(), offlineManager);
-    }
-
-    public RestClient(final OfflineManager offlineManager,
-                      final ExecutorService executor) {
-        this(DEFAULT_API_HOST, null, executor, offlineManager);
+        this(DEFAULT_API_HOST, manager, new SameThreadExecutorService());
     }
 
     public RestClient(final ExecutorService executor) {
-        this(DEFAULT_API_HOST, executor);
-    }
-
-    public RestClient(final String url,
-                      final OfflineManager offlineManager) {
-        this(url, null, new SameThreadExecutorService(), offlineManager);
-    }
-
-    public RestClient(final String url,
-                      final OfflineManager offlineManager,
-                      final ExecutorService executor) {
-        this(url, null, executor, offlineManager);
+        this(DEFAULT_API_HOST, null, executor);
     }
 
     public RestClient(final String url,
                       final ExecutorService executor) {
-        this(url, null, executor, null);
+        this(url, null, executor);
     }
 
     public RestClient(final String url,
                       final CookieManager manager) {
-        this(url, manager, new SameThreadExecutorService(), null);
-    }
-
-    public RestClient(final String url,
-                      final CookieManager manager,
-                      final OfflineManager offlineManager) {
-        this(url, manager, new SameThreadExecutorService(), offlineManager);
+        this(url, manager, new SameThreadExecutorService());
     }
 
     public RestClient(final String url,
                       final CookieManager cookieManager,
-                      final ExecutorService executor,
-                      final OfflineManager offlineManager) {
+                      final ExecutorService executor) {
         try {
             this.url = new URL(url);
-            this.offlineManager = offlineManager;
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException("Bad API server URL");
         }
@@ -185,10 +147,6 @@ public class RestClient {
                                   final ContentType type) {
         return conn.getContentType() != null &&
                conn.getContentType().startsWith(type.getValue());
-    }
-
-    public OfflineManager getOfflineManager() {
-        return offlineManager;
     }
 
     // Return true if caller should retry, false if give up
@@ -314,24 +272,9 @@ public class RestClient {
         return null;
     }
 
-    private boolean isLoggableRequestType(final RequestBuilder builder) {
-        return (builder.getMethod() == RequestMethod.POST ||
-                builder.getMethod() == RequestMethod.PUT ||
-                builder.getMethod() == RequestMethod.DELETE ||
-                builder.getMethod() == RequestMethod.PATCH);
-    }
-
     public <T> T executeRequest(final RequestBuilder builder,
                                 final StatusCode expectedStatusCode,
                                 final Class<T> responseClass)
-        throws IOException, ApiException {
-        return executeRequest(builder, expectedStatusCode, responseClass, true);
-    }
-
-    public <T> T executeRequest(final RequestBuilder builder,
-                                final StatusCode expectedStatusCode,
-                                final Class<T> responseClass,
-                                final boolean requestShouldBeLogged)
         throws IOException, ApiException {
 
         final Object content = builder.getContent();
@@ -362,13 +305,6 @@ public class RestClient {
         DataOutputStream out = null;
         int retryCount = 0;
         boolean forceRefreshToken = false;
-        long requestId = -1;
-
-        if (offlineManager != null &&
-            requestShouldBeLogged &&
-            isLoggableRequestType(builder)) {
-            requestId = offlineManager.logRequest(builder, responseClass, expectedStatusCode);
-        }
 
         while (!Thread.currentThread().isInterrupted()) {
             try {
@@ -419,10 +355,6 @@ public class RestClient {
                     result = readContent(conn,
                                          statusCode,
                                          responseClass);
-
-                    if (requestId != -1) {
-                        offlineManager.logResponse(requestId);
-                    }
 
                     if (statusCode != expectedStatusCode) {
                         logger.fine("Status code: " + statusCode);

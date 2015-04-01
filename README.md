@@ -1,5 +1,4 @@
-# Java Client Library for the IOBeam RESTful API #
-
+# Java / Android Library for the iobeam API #
 
 
 ## Building ##
@@ -8,17 +7,10 @@
 
 A jar file will be produced under ```/target```
 
-## Integration Tests ##
-
-The test suite contains a number of integration tests that checks common API 
-calls against the real API servers. These tests are not run by default, but can
-be manually run as follows:
-
-```$  mvn verify -DskipITs=false```
 
 ## Getting Started ##
 
-This library is meant to allow Java clients to import data into the IoBeam Cloud. Applications will
+This library is meant to allow Java clients to import data into the iobeam Cloud. Applications will
 make `DataPoint`s that can be be organized into different series of data in an `Import` resource.
 As an example, let's assume we have created an app that measures the current temperature that can
 be accessed by `getTemperature()`.
@@ -69,21 +61,21 @@ The `Import` object can hold several series at once. For example, if you also ha
         Thread.sleep(1000);
     }
 
-### Connecting to IoBeam Cloud ###
+### Connecting to iobeam Cloud ###
 
-Now, to actually get this data into the IoBeam Cloud, you need to use an `Imports` service object.
+Now, to actually get this data into the iobeam Cloud, you need to use an `Imports` service object.
 This service object takes an `Import` object and handles everything needed to get it to our servers.
 It requires some one-time setup before it can be used:
 
     private static final long PROJECT_ID = ...;
     private static final String PROJECT_TOKEN = ...;
 
-    private IoBeam client = IoBeam.init(PROJECT_ID, PROJECT_TOKEN);
+    private Iobeam client = Iobeam.init(PROJECT_ID, PROJECT_TOKEN);
     private Imports service = new Imports(client);
 
 You will need to have your project ID and token associated with it in order to submit data. Then
-you initialize the `IoBeam` object with those credentials, followed by the `Imports` service with
-your `IoBeam` instance. Now the service is ready to import data for you:
+you initialize the `Iobeam` object with those credentials, followed by the `Imports` service with
+your `Iobeam` instance. Now the service is ready to import data for you:
 
     Import imp = new Import(DEVICE_ID, PROJECT_ID);
     ...

@@ -1,6 +1,6 @@
 package com.iobeam.api.service;
 
-import com.iobeam.api.client.IoBeam;
+import com.iobeam.api.client.Iobeam;
 import com.iobeam.api.client.RestClient;
 import com.iobeam.api.client.RestRequest;
 import com.iobeam.api.http.ContentType;
@@ -18,7 +18,7 @@ public class Imports {
     private final static Logger logger = Logger.getLogger(Imports.class.getName());
     private final RestClient client;
 
-    public Imports(final IoBeam client) {
+    public Imports(final Iobeam client) {
         this.client = client.getRestClient();
     }
 
