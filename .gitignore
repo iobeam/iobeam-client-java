@@ -8,3 +8,4 @@
 *.iml
 /out
 junit-4.7.jar
+/src/test/java/com/iobeam/api/integration*
