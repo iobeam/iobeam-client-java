@@ -1,14 +1,14 @@
 # Java / Android Library for the iobeam API #
 
+## Installation ##
 
-## Building ##
+To install to your local Maven repository:
 
-```$ mvn package```
+```mvn install```
 
-A jar file will be produced under ```/target```
+It will be installed as artifact ```iobeam-client-java``` under the group ```com.iobeam```.
 
-
-## Getting Started ##
+## Getting started ##
 
 This library is meant to allow Java clients to import data into the iobeam Cloud. Applications will
 make `DataPoint`s that can be be organized into different series of data in an `Import` resource.
