@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.iobeam</groupId>
-    <artifactId>iobeam-api-java-client</artifactId>
+    <artifactId>iobeam-client-java</artifactId>
     <version>0.1-SNAPSHOT</version>
 
     <name>iobeam-api-java-client</name>
