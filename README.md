@@ -1,72 +1,111 @@
-# Java / Android Library for the iobeam API #
+# iobeam Java / Android Library
+
+**[iobeam](http://iobeam.com)** is a data platform for connected devices. 
+
+This is a Java library for sending data to the **iobeam Cloud**, e.g., from within an Android app.
+For more information on the iobeam Cloud, please read our [full API documentation](http://docs.iobeam.com).
+
+*Please note that we are currently invite-only. You will need an invite 
+to generate a valid token and use our APIs. (Sign up [here](http://iobeam.com for an invite).)*
+
+
+## Before you start ##
+
+Before you can start sending data to the iobeam Cloud, you'll need: an iobeam user account, project/project_id,
+and project_token with write-access enabled. You can get these easily with our
+[Command-line interface tool](https://github.com/iobeam/iobeam).
 
 
 ## Installation ##
 
 To install to your local Maven repository:
 
-```mvn install```
+    git clone https://github.com/iobeam/iobeam-client-java.git
+    cd iobeam-client-java
+    mvn install
 
 It will be installed as artifact ```iobeam-client-java``` under the group ```com.iobeam```.
 
-## Getting started ##
 
-This library is meant to allow Java clients to import data into the iobeam Cloud. Applications will
-make `DataPoint`s that can be be organized into different series of data in an `Import` resource.
-As an example, let's assume we have created an app that measures the current temperature that can
-be accessed by `getTemperature()`.
+## Overview ##
 
-To create a DataPoint for a reading:
+This library allows Java clients to send data to the iobeam Cloud. 
+
+At a high-level, here's how it works:
+
+1. Create an `Import` object, which serves a collection of your data sources
+
+1. Create a `DataPoint` object for each time-series data point
+
+1. Add the `DataPoint` to `Import` under your `series_name` (e.g., "temperature")
+
+1. When you're ready, send the `Import` object to the iobeam Cloud using the `Iobeam` client and `Imports` service
+
+
+## Getting Started ##
+
+Here's how to get started, using a basic example that sends temperature data to iobeam. (For simplicitly, 
+let's assume that the current temperature can be accessed with `getTemperature()`).
+
+(Reminder: Before you start, create a user account, project, and project_token (with write access) 
+using the iobeam APIs or Command-line interface. Write down your new `project_id` and `project_token`.)
+
+### Tracking Time-series Data ###
+
+First, create an `Import` object that will serve as the collection of all your data points:
+
+    private static final String DEVICE_ID = ...;
+    private static final long PROJECT_ID = ...;
+
+    Import imp = new Import(DEVICE_ID, PROJECT_ID);
+
+Next, create a `DataPoint` object for each time-series data point:
 
     double t = getTemperature();
     DataPoint d = new DataPoint(System.currentTimeInMillis(), t);
 
     // DataPoint d = new DataPoint(t); is equivalent to above
 
-The timestamp provided should be in milliseconds since epoch. The value can be integral or real.
+(The timestamp provided should be in milliseconds since epoch. The value can be integral or real.)
 
-### Data series and `Import` ###
+Now, pick a name for your data series (e.g., "temperature"), and add the `DataPoint` under that 
+series to the `Import` object.
 
-To organize your data points into series, you'll need an `Import` object. This object can store
-multiple points so you do not necessarily need to create one for each `DataPoint`. `Import` objects
-are associated with a particular project and device, and therefore need those two items to create
-one:
+    imp.addDataPoint("temperature", d);
 
-    final String DEVICE_ID = ...;
-    final long PROJECT_ID = ...;
-
-    Import imp = new Import(DEVICE_ID, PROJECT_ID);
-
-Now that you have this object you can add data to it:
+Here's another example that takes and stores a temperature reading every second:
 
     Import imp = new Import(DEVICE_ID, PROJECT_ID);
     while (true) {
         DataPoint d = new DataPoint(getTemperature());
-        imp.addDataPoint("temp", d);
+        imp.addDataPoint("temperature", d);
         Thread.sleep(1000);
     }
-Here a new temperature reading is taken every second and added to the `Import` object to a series
-called "temp".
 
-The `Import` object can hold several series at once. For example, if you also have a
-`getHumidity()` function, you could do:
+Note that the `Import` object can hold several series at once. For example, 
+if you also had a `getHumidity()` function, you could add both data points to the same
+`Import`:
 
     Import imp = new Import(DEVICE_ID, PROJECT_ID);
     while (true) {
         DataPoint dt = new DataPoint(getTemperature());
         DataPoint dh = new DataPoint(getHumidity());
 
-        imp.addDataPoint("temp", dt);
+        imp.addDataPoint("temperature", dt);
         imp.addDataPoint("humidity", dh);
 
         Thread.sleep(1000);
     }
 
-### Connecting to iobeam Cloud ###
 
-Now, to actually get this data into the iobeam Cloud, you need to use an `Imports` service object.
-This service object takes an `Import` object and handles everything needed to get it to our servers.
-It requires some one-time setup before it can be used:
+### Connecting to the iobeam Cloud ###
+
+To send this data to the iobeam Cloud, you'll need an `Imports` service object, 
+which takes an `Import` object and handles everything needed to communicate with our servers.
+The `Imports` service, in turn, requires an `Iobeam` client.
+
+First, initialize an `Iobeam` client and an `Imports` service, using your `project_id` and 
+`project_token` (with write-access enabled).
 
     private static final long PROJECT_ID = ...;
     private static final String PROJECT_TOKEN = ...;
@@ -74,9 +113,7 @@ It requires some one-time setup before it can be used:
     private Iobeam client = Iobeam.init(PROJECT_ID, PROJECT_TOKEN);
     private Imports service = new Imports(client);
 
-You will need to have your project ID and token associated with it in order to submit data. Then
-you initialize the `Iobeam` object with those credentials, followed by the `Imports` service with
-your `Iobeam` instance. Now the service is ready to import data for you:
+Now, you can start sending data via your `Import` object:
 
     Import imp = new Import(DEVICE_ID, PROJECT_ID);
     ...
@@ -91,8 +128,46 @@ your `Iobeam` instance. Now the service is ready to import data for you:
         e.printStackTrace();
     }
 
-Here the data points are submitted when ``req.execute()`` is called. If there are problems with the
+Data points are submitted when ``req.execute()`` is called. If there are problems with the
 data as provided, an `ApiException` is thrown (e.g. incorrect project ID or device ID, invalid data,
 etc). `IOException` is thrown in the case of network connectivity issues.
+
+
+### Full Example ###
+
+Here's the full source code for our example:
+
+    // Initialization
+    private static final long PROJECT_ID = ...;
+    private static final String PROJECT_TOKEN = ...;
+    private static final String DEVICE_ID = ...;
+
+    private Iobeam client = Iobeam.init(PROJECT_ID, PROJECT_TOKEN);
+    private Imports service = new Imports(client);
+
+    ...
+
+    // Data gathering
+    Import imp = new Import(DEVICE_ID, PROJECT_ID);
+
+    DataPoint dt = new DataPoint(getTemperature());
+    DataPoint dh = new DataPoint(getHumidity());
+
+    imp.addDataPoint("temperature", dt);
+    imp.addDataPoint("humidity", dh);
+
+    ...
+
+    // Data transmission
+    Imports.Submit req = service.submit(imp);
+
+    try {
+        req.execute();
+    } catch (ApiException e) {
+        e.printStackTrace();
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+
 
 These instructions should hopefully be enough to get you started with the library!
