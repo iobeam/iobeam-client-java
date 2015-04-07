@@ -7,6 +7,7 @@ import com.iobeam.api.auth.AuthToken;
 import com.iobeam.api.auth.UserBearerAuthToken;
 import com.iobeam.api.http.RequestBuilder;
 import com.iobeam.api.http.StatusCode;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,7 +20,11 @@ import java.util.Date;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RestClientTest {
@@ -46,7 +51,7 @@ public class RestClientTest {
         doReturn(0).when(conn).getContentLength();
         doReturn(true).when(conn).getDoInput();
         validToken = new UserBearerAuthToken(0, "user", new Date(
-                System.currentTimeMillis() + 60000));
+            System.currentTimeMillis() + 60000));
     }
 
     @Test

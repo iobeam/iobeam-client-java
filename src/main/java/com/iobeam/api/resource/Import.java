@@ -18,7 +18,7 @@ import java.util.Set;
  */
 public class Import implements Serializable {
 
-    private final String deviceId;
+    private String deviceId;
     private final long projectId;
 
     private final Map<String, Set<DataPoint>> sources = new HashMap<String, Set<DataPoint>>();
@@ -32,6 +32,10 @@ public class Import implements Serializable {
     public Import(String deviceId, long projectId) {
         this.deviceId = deviceId;
         this.projectId = projectId;
+    }
+
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
     }
 
     public String getDeviceId() {
