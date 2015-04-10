@@ -39,12 +39,14 @@ public abstract class RegisterCallback {
 
     /**
      * Called when the device registration request succeeds.
+     *
      * @param deviceId The new device ID.
      */
     public abstract void onSuccess(String deviceId);
 
     /**
      * Called when the device registration request fails.
+     *
      * @param exc The error that resulted from the request.
      * @param req The request that caused the error.
      */
