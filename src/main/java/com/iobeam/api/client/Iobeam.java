@@ -106,6 +106,16 @@ public class Iobeam {
      * Resets the iobeam client to an uninitialized state including clearing all added data.
      */
     public static void reset() {
+        reset(true);
+    }
+
+    /**
+     * Resets the iobeam client to uninitialized state, including removing any added data.
+     *
+     * @param deleteFile Whether or not to delete the on-disk device ID. Tests use false sometimes.
+     */
+    static void reset(boolean deleteFile) {
+        String path = Iobeam.path;
         Iobeam.path = null;
         Iobeam.projectId = -1;
         Iobeam.projectToken = null;
@@ -115,6 +125,13 @@ public class Iobeam {
 
         synchronized (dataStoreLock) {
             dataStore = null;
+        }
+
+        if (deleteFile) {
+            File f = new File(path, DEVICE_FILENAME);
+            if (f.exists()) {
+                f.delete();
+            }
         }
     }
 
@@ -168,6 +185,17 @@ public class Iobeam {
         Iobeam.deviceId = id;
         persistDeviceId();
         return id;
+    }
+
+
+    /**
+     * Registers this device and gets its device id in an asynchronous fashion. This will not block
+     * the calling thread.
+     *
+     * @throws ApiException Thrown if the iobeam client is not initialized.
+     */
+    public static void registerDeviceAsync() throws ApiException {
+        registerDeviceAsync(null);
     }
 
     /**

@@ -29,20 +29,12 @@ public class IobeamTest {
     @Before
     public void setUp() throws Exception {
         Iobeam.reset();
-        removeDeviceId();
         assertFalse(Iobeam.isInitialized());
     }
 
     @AfterClass
     public static void tearDown() throws Exception {
-        removeDeviceId();
-    }
-
-    private static void removeDeviceId() {
-        File f = new File(FILE_PATH, Iobeam.DEVICE_FILENAME);
-        if (f.exists()) {
-            f.delete();
-        }
+        Iobeam.reset();
     }
 
     @Test
@@ -68,7 +60,7 @@ public class IobeamTest {
     public void testInitDeviceOnDisk() throws Exception {
         // Set a device ID then reset state.
         Iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);
-        Iobeam.reset();
+        Iobeam.reset(false);  // simulates app being closed
 
         // Test that the persisted device ID is used.
         Iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN);
