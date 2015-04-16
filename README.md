@@ -47,9 +47,11 @@ If you are building an Android app, add the following lines to your `app/build.g
     }
 
     dependencies {
-        compile fileTree(dir: 'libs', include: ['*.jar'])
-        compile 'com.iobeam:iobeam-client-java:0.1-SNAPSHOT'
+        ...
+        compile 'com.iobeam:iobeam-client-java:0.2'
     }
+
+It is also available on Maven Central.
 
 ## Overview ##
 
@@ -57,9 +59,10 @@ This library allows Java clients to send data to the iobeam Cloud.
 
 At a high-level, here's how it works:
 
-1. Initialize the `Iobeam` library with your `project_id` and `project_token`
+1. Initialize an `Iobeam` object with your `project_id` and `project_token`
 
-1. Register your device with an auto-generated `device_id` (you can optionally pass a `device_id` in the previous step and skip this step)
+1. Register your device to get an auto-generated `device_id`. Optionally, you can initialize the
+ object with a `device_id` in the previous step and skip this step
 
 1. Create a `DataPoint` object for each time-series data point
 
@@ -70,26 +73,54 @@ At a high-level, here's how it works:
 
 ## Getting Started ##
 
-Here's how to get started, using a basic example that sends temperature data to iobeam. (For simplicitly, 
-let's assume that the current temperature can be accessed with `getTemperature()`).
+Here's how to get started, using a basic example that sends temperature data to iobeam.
+(For simplicity, let's assume that the current temperature can be accessed
+with `getTemperature()`).
 
 (Reminder: Before you start, create a user account, project, and project_token (with write access) 
 using the iobeam APIs or Command-line interface. Write down your new `project_id` and `project_token`.)
 
+### iobeam Initialization ###
+
+There are several ways to initialize the `Iobeam` library. All require that you have `project_id`
+and `project_token` before hand.
+
+**Without a pre-known `device_id`**
+
+If you have not pre-created a `device_id`, you'll need to register one:
+
+    Iobeam iobeam = new Iobeam(PATH, PROJECT_ID, PROJECT_TOKEN);
+    if (iobeam.getDeviceId() == null)
+        iobeam.registerDeviceAsync(null); // Registers using auto-generated device_id
+
+The `device_id` will be saved to disk at the path `PATH`. On Android, this would be set to something
+like `this.getFilesDir().getAbsolutePath()`, which is internal storage for applications. On future
+calls, this on-disk storage will be read first. Therefore we check whether the ID is set before
+registering a new ID.
+
+**With a known `device_id`**
+
+If you have created a `device_id` (e.g. using our [CLI](https://github.com/iobeam/iobeam)), you can pass this in the constructor
+and skip the registration step.
+
+    Iobeam iobeam = new Iobeam(PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);
+
+**Advanced: not saving to disk**
+
+If you don't want the `device_id` to be automatically stored for you, set the `path` parameter in
+either constructor to be `null`:
+
+    Iobeam iobeam = new Iobeam(null, PROJECT_ID, PROJECT_TOKEN);  // without known id
+    Iobeam iobeam = new Iobeam(null, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);  // with known id
+
+This is useful for cases where you want to persist the ID yourself (e.g. in a settings file), or if
+you are making `Iobeam` objects that are temporary. For example, if the device you are using acts
+as a relay or proxy for other devices, it could get the `device_id` from those devices and have
+no need to save it.
+
 ### Tracking Time-series Data ###
 
-First, initialize the `Iobeam` library with your `project_id` and `project_token`, and register the device:
-
-    Iobeam.init(this.getFilesDir().getAbsolutePath(), PROJECT_ID, PROJECT_TOKEN);
-    Iobeam.registerDeviceAsync(null); // Registers using auto-generated device_id
-
-*Alternately, you can register your device with a specific `device_id` and combine these two steps as follows:*
-
-    Iobeam.init(this.getFilesDir().getAbsolutePath(), PROJECT_ID, PROJECT_TOKEN, DEVICE_ID); // Registers using DEVICE_ID
-
-*Note that the `device_id` must be **globally-unique** and **at least 16 characters long**.*
-
-Next, create a `DataPoint` object for each time-series data point:
+For each time-series data point, create a `DataPoint` object:
 
     double t = getTemperature();
     DataPoint d = new DataPoint(t);
@@ -101,26 +132,26 @@ Next, create a `DataPoint` object for each time-series data point:
 Now, pick a name for your data series (e.g., "temperature"), and add the `DataPoint` under that 
 series:
 
-    Iobeam.addData("temperature", d);
+    iobeam.addData("temperature", d);
 
 Here's another example that takes and stores a temperature reading every second:
 
     while (true) {
         DataPoint d = new DataPoint(getTemperature());
-        Iobeam.addData("temperature", d);
+        iobeam.addData("temperature", d);
         Thread.sleep(1000);
     }
 
 Note that the `Iobeam` object can hold several series at once. For example, 
 if you also had a `getHumidity()` function, you could add both data points to the same
-`Import`:
+`Iobeam`:
 
     while (true) {
         DataPoint dt = new DataPoint(getTemperature());
         DataPoint dh = new DataPoint(getHumidity());
 
-        Iobeam.addData("temperature", dt);
-        Iobeam.addData("humidity", dh);
+        iobeam.addData("temperature", dt);
+        iobeam.addData("humidity", dh);
 
         Thread.sleep(1000);
     }
@@ -130,8 +161,8 @@ if you also had a `getHumidity()` function, you could add both data points to th
 
 You can send your data to the iobeam Cloud in two ways: synchronously and asynchronously:
 
-    Iobeam.send(); // blocking
-    Iobeam.sendAsync(); // non-blocking
+    iobeam.send(); // blocking
+    iobeam.sendAsync(); // non-blocking
 
 If there are problems with the
 data as provided, an `ApiException` is thrown (e.g. incorrect project ID or device ID, invalid data,
@@ -144,8 +175,9 @@ Here's the full source code for our example:
 
     // Initialization
     try {
-        Iobeam.init(this.getFilesDir().getAbsolutePath(), PROJECT_ID, PROJECT_TOKEN);
-        Iobeam.registerDeviceAsync(null); // Registers using auto-generated device_id
+        Iobeam iobeam = new Iobeam(PATH, PROJECT_ID, PROJECT_TOKEN);
+        if (iobeam.getDeviceId() == null)
+            iobeam.registerDeviceAsync(null); // Registers using auto-generated device_id
     } catch (ApiException e) {
         e.printStackTrace();
     }
@@ -156,14 +188,14 @@ Here's the full source code for our example:
     DataPoint dt = new DataPoint(getTemperature());
     DataPoint dh = new DataPoint(getHumidity());
 
-    Iobeam.addData("temperature", dt);
-    Iobeam.addData("humidity", dh);
+    iobeam.addData("temperature", dt);
+    iobeam.addData("humidity", dh);
 
     ...
 
     // Data transmission
     try {
-        Iobeam.sendAsync();
+        iobeam.sendAsync();
     } catch (ApiException e) {
         e.printStackTrace();
     }

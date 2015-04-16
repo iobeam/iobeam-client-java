@@ -46,53 +46,61 @@ public class Iobeam {
         }
     }
 
-    static String path = null;
-    static long projectId = -1;
-    static String projectToken = null;
-    static String deviceId = null;
+    String path = null;
+    long projectId = -1;
+    String projectToken = null;
+    String deviceId = null;
 
-    private static RestClient client = null;
+    private RestClient client = null;
+    private final Object dataStoreLock = new Object();
+    private Import dataStore;
 
-    private static final Object dataStoreLock = new Object();
-    private static Import dataStore;
-
-    /**
-     * Tells whether the iobeam client has been initialized.
-     *
-     * @return True if initialized; otherwise, false.
-     */
-    public static boolean isInitialized() {
-        return path != null && projectId > 0 && projectToken != null && client != null;
-    }
 
     /**
-     * Initialize the iobeam client without a specified device ID (either read off disk or a new one
-     * will need to be acquired.
+     * Constructs an Iobeam object without a device ID.
      *
      * @param path         Directory where the device ID file, iobeam-device-id, should be written.
+     *                     If null, the device ID is <b>not</b> persisted.
      * @param projectId    The numeric project ID to associate with.
      * @param projectToken The token to use when communicating with iobeam cloud.
      * @throws ApiException Thrown if something goes wrong with initializing the device ID.
      */
-    public static void init(String path, long projectId, String projectToken) throws ApiException {
-        init(path, projectId, projectToken, null);
+    public Iobeam(String path, long projectId, String projectToken)
+        throws ApiException {
+        this(path, projectId, projectToken, null);
     }
 
     /**
-     * Initializes the iobeam client.
+     * Constructs an Iobeam object with a device ID.
      *
      * @param path         Directory where the device ID file, iobeam-device-id, should be written.
+     *                     If null, the device ID is <b>not</b> persisted.
+     * @param projectId    The numeric project ID to associate with.
+     * @param projectToken The token to use when communicating with iobeam cloud.
+     * @param deviceId     Pre-registered device id to be used.
+     * @throws ApiException Thrown if something goes wrong with initializing the device ID.
+     */
+    public Iobeam(String path, long projectId, String projectToken, String deviceId)
+        throws ApiException {
+        init(path, projectId, projectToken, deviceId);
+    }
+
+    /**
+     * (Re-)initializes the iobeam client.
+     *
+     * @param path         Directory where the device ID file, iobeam-device-id, should be written.
+     *                     If null, the device ID is <b>not</b> persisted.
      * @param projectId    The numeric project ID to associate with.
      * @param projectToken The token to use when communicating with iobeam cloud.
      * @param deviceId     The device ID that should be used by the iobeam client.
      * @throws ApiException Thrown if something goes wrong with initializing the device ID.
      */
-    public static void init(String path, long projectId, String projectToken, String deviceId)
+    void init(String path, long projectId, String projectToken, String deviceId)
         throws ApiException {
-        Iobeam.path = path;
-        Iobeam.projectId = projectId;
-        Iobeam.projectToken = projectToken;
-        if (deviceId == null) {
+        this.path = path;
+        this.projectId = projectId;
+        this.projectToken = projectToken;
+        if (deviceId == null && path != null) {
             deviceId = localDeviceIdCheck();
         }
         setDeviceId(deviceId);
@@ -103,9 +111,18 @@ public class Iobeam {
     }
 
     /**
+     * Tells whether the iobeam client has been initialized.
+     *
+     * @return True if initialized; otherwise, false.
+     */
+    public boolean isInitialized() {
+        return projectId > 0 && projectToken != null && client != null;
+    }
+
+    /**
      * Resets the iobeam client to an uninitialized state including clearing all added data.
      */
-    public static void reset() {
+    void reset() {
         reset(true);
     }
 
@@ -114,14 +131,14 @@ public class Iobeam {
      *
      * @param deleteFile Whether or not to delete the on-disk device ID. Tests use false sometimes.
      */
-    static void reset(boolean deleteFile) {
-        String path = Iobeam.path;
-        Iobeam.path = null;
-        Iobeam.projectId = -1;
-        Iobeam.projectToken = null;
-        Iobeam.deviceId = null;
+    void reset(boolean deleteFile) {
+        String path = this.path;
+        this.path = null;
+        this.projectId = -1;
+        this.projectToken = null;
+        this.deviceId = null;
 
-        Iobeam.client = null;
+        this.client = null;
 
         synchronized (dataStoreLock) {
             dataStore = null;
@@ -135,11 +152,11 @@ public class Iobeam {
         }
     }
 
-    private static void persistDeviceId() throws CouldNotPersistException {
-        File f = new File(Iobeam.path, DEVICE_FILENAME);
+    private void persistDeviceId() throws CouldNotPersistException {
+        File f = new File(this.path, DEVICE_FILENAME);
         try {
             FileWriter fw = new FileWriter(f);
-            fw.write(Iobeam.deviceId);
+            fw.write(this.deviceId);
             fw.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -147,8 +164,8 @@ public class Iobeam {
         }
     }
 
-    private static String localDeviceIdCheck() {
-        File f = new File(Iobeam.path, DEVICE_FILENAME);
+    private String localDeviceIdCheck() {
+        File f = new File(this.path, DEVICE_FILENAME);
         try {
             if (f.exists()) {
                 BufferedReader br = new BufferedReader(new FileReader(f));
@@ -162,7 +179,7 @@ public class Iobeam {
         return null;
     }
 
-    private static Devices.Add prepareDeviceRequest() throws NotInitializedException {
+    private Devices.Add prepareDeviceRequest() throws NotInitializedException {
         if (!isInitialized()) {
             throw new NotInitializedException();
         }
@@ -179,14 +196,15 @@ public class Iobeam {
      *                      writing the device ID.
      * @throws IOException  Thrown if network errors occur while trying to register.
      */
-    public static String registerDevice() throws ApiException, IOException {
+    public String registerDevice() throws ApiException, IOException {
         Devices.Add req = prepareDeviceRequest();
         String id = req.execute().getId();
-        Iobeam.deviceId = id;
-        persistDeviceId();
+        this.deviceId = id;
+        if (path != null) {
+            persistDeviceId();
+        }
         return id;
     }
-
 
     /**
      * Registers this device and gets its device id in an asynchronous fashion. This will not block
@@ -194,7 +212,7 @@ public class Iobeam {
      *
      * @throws ApiException Thrown if the iobeam client is not initialized.
      */
-    public static void registerDeviceAsync() throws ApiException {
+    public void registerDeviceAsync() throws ApiException {
         registerDeviceAsync(null);
     }
 
@@ -206,25 +224,12 @@ public class Iobeam {
      * @param callback Callback to call after device is registered.
      * @throws ApiException Thrown if the iobeam client is not initialized.
      */
-    public static void registerDeviceAsync(RegisterCallback callback) throws ApiException {
+    public void registerDeviceAsync(RegisterCallback callback) throws ApiException {
         Devices.Add req = prepareDeviceRequest();
         if (callback == null) {
-            req.executeAsync(RegisterCallback.getEmptyCallback().innerCallback);
+            req.executeAsync(RegisterCallback.getEmptyCallback().getInnerCallback(this));
         } else {
-            req.executeAsync(callback.innerCallback);
-        }
-    }
-
-    /**
-     * Sets the current device id that the iobeam client is associated with.
-     *
-     * @param deviceId Device id to be associated with the iobeam client.
-     * @throws CouldNotPersistException Thrown if there are problems saving the device id to disk.
-     */
-    public static void setDeviceId(String deviceId) throws CouldNotPersistException {
-        Iobeam.deviceId = deviceId;
-        if (deviceId != null) {
-            persistDeviceId();
+            req.executeAsync(callback.getInnerCallback(this));
         }
     }
 
@@ -233,11 +238,24 @@ public class Iobeam {
      *
      * @return The current device id.
      */
-    public static String getDeviceId() {
-        return Iobeam.deviceId;
+    public String getDeviceId() {
+        return this.deviceId;
     }
 
-    static Import getDataStore() {
+    /**
+     * Sets the current device id that the iobeam client is associated with.
+     *
+     * @param deviceId Device id to be associated with the iobeam client.
+     * @throws CouldNotPersistException Thrown if there are problems saving the device id to disk.
+     */
+    public void setDeviceId(String deviceId) throws CouldNotPersistException {
+        this.deviceId = deviceId;
+        if (deviceId != null && path != null) {
+            persistDeviceId();
+        }
+    }
+
+    Import getDataStore() {
         return dataStore;
     }
 
@@ -247,7 +265,7 @@ public class Iobeam {
      * @param seriesName The name of the series that the data belongs to.
      * @param dataPoint  The DataPoint representing a data value at a particular time.
      */
-    public static void addData(String seriesName, DataPoint dataPoint) {
+    public void addData(String seriesName, DataPoint dataPoint) {
         synchronized (dataStoreLock) {
             if (dataStore == null) {
                 dataStore = new Import(deviceId, projectId);
@@ -262,7 +280,7 @@ public class Iobeam {
      * @param series The series to query
      * @return Size of the data set, or 0 if series does not exist.
      */
-    public static int getDataSize(String series) {
+    public int getDataSize(String series) {
         synchronized (dataStoreLock) {
             if (dataStore == null) {
                 return 0;
@@ -272,7 +290,7 @@ public class Iobeam {
         }
     }
 
-    private static Imports.Submit prepareDataRequest() throws ApiException {
+    private Imports.Submit prepareDataRequest() throws ApiException {
         if (!isInitialized()) {
             throw new NotInitializedException();
         }
@@ -302,7 +320,7 @@ public class Iobeam {
      *                      set.
      * @throws IOException  Thrown if there are network issues connecting to iobeam cloud.
      */
-    public static void send() throws ApiException, IOException {
+    public void send() throws ApiException, IOException {
         Imports.Submit req = prepareDataRequest();
         req.execute();
     }
@@ -314,7 +332,7 @@ public class Iobeam {
      * @throws ApiException Thrown is the client is not initialized or if the device id has not been
      *                      set.
      */
-    public static void sendAsync() throws ApiException {
+    public void sendAsync() throws ApiException {
         sendAsync(null);
     }
 
@@ -326,7 +344,7 @@ public class Iobeam {
      * @throws ApiException Thrown is the client is not initialized or if the device id has not been
      *                      set.
      */
-    public static void sendAsync(DataCallback callback) throws ApiException {
+    public void sendAsync(DataCallback callback) throws ApiException {
         Imports.Submit req = prepareDataRequest();
         if (callback == null) {
             req.executeAsync();

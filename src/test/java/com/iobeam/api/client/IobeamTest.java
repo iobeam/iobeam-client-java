@@ -5,6 +5,7 @@ import com.iobeam.api.resource.Import;
 
 import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.BufferedReader;
@@ -12,12 +13,12 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.Set;
 
-import static junit.framework.Assert.assertNotSame;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.assertNotEquals;
 
 public class IobeamTest {
 
@@ -26,70 +27,119 @@ public class IobeamTest {
     private static final String DEVICE_ID = "fake_device_identifier";
     private static final String FILE_PATH = new File(".").getAbsolutePath();
 
-    @Before
-    public void setUp() throws Exception {
-        Iobeam.reset();
-        assertFalse(Iobeam.isInitialized());
+    private static Iobeam iobeam;
+
+    @BeforeClass
+    public static void setUpIobeam() throws Exception {
+        iobeam = new Iobeam(null, 0, null);
     }
 
     @AfterClass
     public static void tearDown() throws Exception {
-        Iobeam.reset();
+        iobeam.reset();
+        iobeam = null;
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        iobeam.reset();
+        assertFalse(iobeam.isInitialized());
     }
 
     @Test
-    public void testInitNoDevice() throws Exception {
-        Iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN);
-        assertEquals(FILE_PATH, Iobeam.path);
-        assertEquals(PROJECT_ID, Iobeam.projectId);
-        assertEquals(PROJECT_TOKEN, Iobeam.projectToken);
-        assertNull(Iobeam.deviceId);
+    public void testConstructorNoDeviceSave() throws Exception {
+        Iobeam iobeam = new Iobeam(FILE_PATH, PROJECT_ID, PROJECT_TOKEN);
+        assertNotNull(iobeam.path);
+        assertEquals(FILE_PATH, iobeam.path);
+        assertEquals(PROJECT_ID, iobeam.projectId);
+        assertEquals(PROJECT_TOKEN, iobeam.projectToken);
+        assertNull(iobeam.deviceId);
     }
 
     @Test
-    public void testInitGivenDevice() throws Exception {
-        Iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);
-        assertEquals(FILE_PATH, Iobeam.path);
-        assertEquals(PROJECT_ID, Iobeam.projectId);
-        assertEquals(PROJECT_TOKEN, Iobeam.projectToken);
-        assertNotNull(Iobeam.deviceId);
-        assertEquals(DEVICE_ID, Iobeam.deviceId);
+    public void testConstructorNoDeviceNoSave() throws Exception {
+        Iobeam iobeam = new Iobeam(null, PROJECT_ID, PROJECT_TOKEN);
+        assertNull(iobeam.path);
+        assertEquals(PROJECT_ID, iobeam.projectId);
+        assertEquals(PROJECT_TOKEN, iobeam.projectToken);
+        assertNull(iobeam.deviceId);
     }
 
     @Test
-    public void testInitDeviceOnDisk() throws Exception {
+    public void testConstructorDeviceNoSave() throws Exception {
+        Iobeam iobeam = new Iobeam(null, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);
+        assertNull(iobeam.path);
+        assertEquals(PROJECT_ID, iobeam.projectId);
+        assertEquals(PROJECT_TOKEN, iobeam.projectToken);
+        assertNotNull(iobeam.deviceId);
+        assertEquals(DEVICE_ID, iobeam.deviceId);
+
+        // Should not be on disk
+        File f = new File(FILE_PATH, Iobeam.DEVICE_FILENAME);
+        assertFalse(f.exists());
+    }
+
+    @Test
+    public void testInitDeviceWithDisk() throws Exception {
         // Set a device ID then reset state.
-        Iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);
-        Iobeam.reset(false);  // simulates app being closed
+        Iobeam iobeam = new Iobeam(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);
+        assertNotNull(iobeam.path);
+        File f = new File(FILE_PATH, Iobeam.DEVICE_FILENAME);
+        assertTrue(f.exists());
+        iobeam.reset(false);  // simulates app being closed, 'false' keeps ID on disk
 
         // Test that the persisted device ID is used.
-        Iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN);
-        assertEquals(FILE_PATH, Iobeam.path);
-        assertEquals(PROJECT_ID, Iobeam.projectId);
-        assertEquals(PROJECT_TOKEN, Iobeam.projectToken);
-        assertNotNull(Iobeam.deviceId);
-        assertEquals(DEVICE_ID, Iobeam.deviceId);
+        iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, null);
+        assertEquals(FILE_PATH, iobeam.path);
+        assertEquals(PROJECT_ID, iobeam.projectId);
+        assertEquals(PROJECT_TOKEN, iobeam.projectToken);
+        assertNotNull(iobeam.deviceId);
+        assertEquals(DEVICE_ID, iobeam.deviceId);
+
+        // New iobeam object uses disk ID
+        Iobeam iobeam2 = new Iobeam(FILE_PATH, PROJECT_ID, PROJECT_TOKEN);
+        assertNotNull(iobeam2.path);
+        assertEquals(FILE_PATH, iobeam2.path);
+        assertEquals(DEVICE_ID, iobeam2.deviceId);
 
         // Test that the one written to disk is overwritten.
-        Iobeam.reset();
+        iobeam.reset();
         final String DEVICE_ID_NEW = "thisisadifferentid";
-        assertNotSame(DEVICE_ID, DEVICE_ID_NEW);
-        Iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID_NEW);
-        assertNotNull(Iobeam.deviceId);
-        assertEquals(DEVICE_ID_NEW, Iobeam.deviceId);
+        assertNotEquals(DEVICE_ID, DEVICE_ID_NEW);
+        iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID_NEW);
+        assertNotNull(iobeam.deviceId);
+        assertEquals(DEVICE_ID_NEW, iobeam.deviceId);
     }
 
     @Test
-    public void testSetDeviceId() throws Exception {
+    public void testSetDeviceIdNoPersist() throws Exception {
         File f = new File(FILE_PATH, Iobeam.DEVICE_FILENAME);
 
-        Iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN);
-        assertNull(Iobeam.deviceId);
+        // Note useDisk = false
+        Iobeam iobeam = new Iobeam(null, PROJECT_ID, PROJECT_TOKEN);
+        assertNull(iobeam.path);
+        assertNull(iobeam.deviceId);
         assertFalse(f.exists());
 
-        Iobeam.setDeviceId(DEVICE_ID);
-        assertNotNull(Iobeam.deviceId);
+        // Since useDisk = false in constructor, deviceId should NOT be on disk.
+        iobeam.setDeviceId(DEVICE_ID);
+        assertNotNull(iobeam.deviceId);
+        assertFalse(f.exists());
+    }
+
+    @Test
+    public void testSetDeviceIdPersist() throws Exception {
+        File f = new File(FILE_PATH, Iobeam.DEVICE_FILENAME);
+
+        // Note useDisk = true
+        Iobeam iobeam = new Iobeam(FILE_PATH, PROJECT_ID, PROJECT_TOKEN);
+        assertNull(iobeam.deviceId);
+        assertFalse(f.exists());
+
+        iobeam.setDeviceId(DEVICE_ID);
+        assertNotNull(iobeam.deviceId);
         assertTrue(f.exists());
+
         // Check that it is persisted.
         BufferedReader br = new BufferedReader(new FileReader(f));
         String line = br.readLine();
@@ -101,11 +151,11 @@ public class IobeamTest {
     public void testAddData() throws Exception {
         final String SERIES = "series1";
         DataPoint d1 = new DataPoint(1000, 2000);
-        Iobeam.addData(SERIES, d1);
-        Import ds = Iobeam.getDataStore();
+        iobeam.addData(SERIES, d1);
+        Import ds = iobeam.getDataStore();
         Set<DataPoint> data = ds.getDataSeries(SERIES);
         assertEquals(1, data.size());
-        assertEquals(data.size(), Iobeam.getDataSize(SERIES));
+        assertEquals(data.size(), iobeam.getDataSize(SERIES));
         assertTrue(data.contains(d1));
     }
 
@@ -113,20 +163,20 @@ public class IobeamTest {
     public void testGetDataSize() throws Exception {
         final String SERIES = "series1";
         DataPoint d1 = new DataPoint(1000, 2000);
-        Iobeam.addData(SERIES, d1);
-        assertEquals(1, Iobeam.getDataSize(SERIES));
+        iobeam.addData(SERIES, d1);
+        assertEquals(1, iobeam.getDataSize(SERIES));
         DataPoint d2 = new DataPoint(2000, 4000);
-        Iobeam.addData(SERIES, d2);
-        assertEquals(2, Iobeam.getDataSize(SERIES));
+        iobeam.addData(SERIES, d2);
+        assertEquals(2, iobeam.getDataSize(SERIES));
 
-        assertEquals(0, Iobeam.getDataSize("something_else"));
+        assertEquals(0, iobeam.getDataSize("something_else"));
     }
 
     @Test
     public void testRegisterDevice() throws Exception {
         boolean error = false;
         try {
-            Iobeam.registerDevice();
+            iobeam.registerDevice();
         } catch (Iobeam.NotInitializedException e) {
             error = true;
         }
