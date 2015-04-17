@@ -20,22 +20,25 @@ public abstract class RegisterCallback {
         };
     }
 
-    final RestCallback<Device.Id> innerCallback = new RestCallback<Device.Id>() {
-        @Override
-        public void completed(Device.Id result, RestRequest req) {
-            try {
-                Iobeam.setDeviceId(result.toString());
-            } catch (Exception e) {
-                onFailure(e, req);
-            }
-            onSuccess(result.getId());
-        }
 
-        @Override
-        public void failed(Throwable exc, RestRequest req) {
-            onFailure(exc, req);
-        }
-    };
+    RestCallback<Device.Id> getInnerCallback(final Iobeam iobeam) {
+        return new RestCallback<Device.Id>() {
+            @Override
+            public void completed(Device.Id result, RestRequest req) {
+                try {
+                    iobeam.setDeviceId(result.toString());
+                } catch (Exception e) {
+                    onFailure(e, req);
+                }
+                onSuccess(result.getId());
+            }
+
+            @Override
+            public void failed(Throwable exc, RestRequest req) {
+                onFailure(exc, req);
+            }
+        };
+    }
 
     /**
      * Called when the device registration request succeeds.
