@@ -26,15 +26,15 @@ public class ImportTest {
         assertNotNull(imp);
         assertEquals(TEST_DEVICE_ID, imp.getDeviceId());
         assertEquals(1000, imp.getProjectId());
-        assertNotNull(imp.getSources());
-        assertEquals(0, imp.getSources().size());
+        assertNotNull(imp.getSeries());
+        assertEquals(0, imp.getSeries().size());
     }
 
     @Test
     public void testAddDataPoints() throws Exception {
         Import imp = new Import(TEST_DEVICE_ID, 1000);
-        assertNotNull(imp.getSources());
-        assertEquals(0, imp.getSources().size());
+        assertNotNull(imp.getSeries());
+        assertEquals(0, imp.getSeries().size());
 
         DataPoint d1 = new DataPoint(10, 100);
         DataPoint d2 = new DataPoint(20, 110);
@@ -46,7 +46,7 @@ public class ImportTest {
         imp.addDataPoint("series1", d2);
         imp.addDataPoint("series1", d3);
         assertEquals(3, imp.getDataSeries("series1").size());
-        assertEquals(1, imp.getSources().size());
+        assertEquals(1, imp.getSeries().size());
         assertTrue(imp.getDataSeries("series1").contains(d1));
         assertTrue(imp.getDataSeries("series1").contains(d2));
         assertTrue(imp.getDataSeries("series1").contains(d3));
@@ -55,7 +55,7 @@ public class ImportTest {
         DataPoint d5 = new DataPoint(20, 114);
         imp.addDataPoint("series2", d4);
         imp.addDataPoint("series2", d5);
-        assertEquals(2, imp.getSources().size());
+        assertEquals(2, imp.getSeries().size());
         assertEquals(2, imp.getDataSeries("series2").size());
         assertTrue(imp.getDataSeries("series2").contains(d4));
         assertTrue(imp.getDataSeries("series2").contains(d5));
@@ -68,8 +68,8 @@ public class ImportTest {
     @Test
     public void testToJson() throws Exception {
         Import imp = new Import(TEST_DEVICE_ID, 1000);
-        assertNotNull(imp.getSources());
-        assertEquals(0, imp.getSources().size());
+        assertNotNull(imp.getSeries());
+        assertEquals(0, imp.getSeries().size());
 
         DataPoint d1 = new DataPoint(10, 100);
         DataPoint d2 = new DataPoint(20, 110);
