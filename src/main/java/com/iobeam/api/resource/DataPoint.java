@@ -15,9 +15,7 @@ public class DataPoint implements Serializable {
     private static final String KEY_VALUE = "value";
 
     private final long time;
-    private final Long longData;
-    private final Double doubleData;
-    private final String stringData;
+    private final Object data;
 
     /**
      * Constructor for a point containing integer data
@@ -27,9 +25,7 @@ public class DataPoint implements Serializable {
      */
     public DataPoint(long time, long data) {
         this.time = time;
-        this.longData = data;
-        this.doubleData = null;
-        this.stringData = null;
+        this.data = data;
     }
 
     /**
@@ -40,9 +36,7 @@ public class DataPoint implements Serializable {
      */
     public DataPoint(long time, double data) {
         this.time = time;
-        this.longData = null;
-        this.doubleData = data;
-        this.stringData = null;
+        this.data = data;
     }
 
     /**
@@ -53,9 +47,7 @@ public class DataPoint implements Serializable {
      */
     public DataPoint(long time, String data) {
         this.time = time;
-        this.longData = null;
-        this.doubleData = null;
-        this.stringData = data;
+        this.data = data;
     }
 
     /**
@@ -90,13 +82,7 @@ public class DataPoint implements Serializable {
     }
 
     public Object getValue() {
-        if (longData != null) {
-            return longData;
-        } else if (doubleData != null) {
-            return doubleData;
-        } else {
-            return stringData;
-        }
+        return data;
     }
 
     public static DataPoint fromJson(final JSONObject json) throws ParseException {
@@ -114,13 +100,7 @@ public class DataPoint implements Serializable {
     public JSONObject toJson() {
         JSONObject ret = new JSONObject();
         ret.put(KEY_TIME, time);
-        if (longData != null) {
-            ret.put(KEY_VALUE, longData);
-        } else if (doubleData != null) {
-            ret.put(KEY_VALUE, doubleData);
-        } else {
-            ret.put(KEY_VALUE, stringData);
-        }
+        ret.put(KEY_VALUE, data);
 
         return ret;
     }
@@ -136,20 +116,18 @@ public class DataPoint implements Serializable {
             return false;
         }
         DataPoint that = (DataPoint) object;
-        return this.time == that.time && this.longData.equals(that.longData)
-               && this.doubleData.equals(that.doubleData) && this.stringData
-            .equals(that.stringData);
+        return this.time == that.time && this.data.equals(that.data);
     }
 
     @Override
     public String toString() {
         String dataStr;
-        if (longData != null) {
-            dataStr = KEY_VALUE + "=" + longData;
-        } else if (doubleData != null) {
-            dataStr = KEY_VALUE + "=" + doubleData;
+        boolean isInt = data instanceof Integer || data instanceof Long;
+        boolean isDouble = data instanceof Float || data instanceof Double;
+        if (isInt || isDouble) {
+            dataStr = KEY_VALUE + "=" + data;
         } else {
-            dataStr = KEY_VALUE + "='" + stringData + "'";
+            dataStr = KEY_VALUE + "='" + data + "'";
         }
         return "DataPoint{" +
                "time=" + time +
