@@ -4,6 +4,7 @@ import com.iobeam.api.ApiException;
 import com.iobeam.api.auth.AuthHandler;
 import com.iobeam.api.auth.DefaultAuthHandler;
 import com.iobeam.api.resource.DataPoint;
+import com.iobeam.api.resource.Device;
 import com.iobeam.api.resource.Import;
 import com.iobeam.api.service.Devices;
 import com.iobeam.api.service.Imports;
@@ -179,17 +180,19 @@ public class Iobeam {
         return null;
     }
 
-    private Devices.Add prepareDeviceRequest() throws NotInitializedException {
+    private Devices.Add prepareDeviceRequest(String deviceId) throws NotInitializedException {
         if (!isInitialized()) {
             throw new NotInitializedException();
         }
         Devices service = new Devices(client);
-        return service.add(projectId, null, null, null, null);
+        return service.add(projectId, deviceId, null, null, null);
     }
 
     /**
-     * Registers this device and gets its device id. This call is <b>BLOCKING</b> and should not be
-     * called on UI threads. It will make a network call and not return until it succeeds.
+     * Registers this device and gets it a randomly assigned device ID.
+     * This call is <b>BLOCKING</b> and should not be called on UI threads. It will make a
+     * network call and not return until it completes. If a device ID is already assigned, it will
+     * be returned.
      *
      * @return The new device id for this device.
      * @throws ApiException Thrown if the iobeam client is not initialized or there are problems
@@ -197,7 +200,30 @@ public class Iobeam {
      * @throws IOException  Thrown if network errors occur while trying to register.
      */
     public String registerDevice() throws ApiException, IOException {
-        Devices.Add req = prepareDeviceRequest();
+        return registerDeviceWithId(null);
+    }
+
+    /**
+     * Registers this device with a provided device ID.
+     * This call is <b>BLOCKING</b> and should not be called on UI threads. It will make
+     * a network call and not return until it finishes. Device IDs must be at least 16 characters;
+     * if null, a random one will be assigned. If a device ID is already assigned, and a non-null
+     * ID is not provided, the current one will be returned.
+     *
+     * @param deviceId The desired id for this device; if null, a random one is assigned.
+     * @return The new device id for this device.
+     * @throws ApiException Thrown if the iobeam client is not initialized or there are problems
+     *                      writing the device ID.
+     * @throws IOException  Thrown if network errors occur while trying to register.
+     */
+    public String registerDeviceWithId(String deviceId) throws ApiException, IOException {
+        boolean alreadySet = this.deviceId != null;
+        // If device ID is already set and not explicitly asking for a different one, return
+        // current ID.
+        if (alreadySet && (deviceId == null || this.deviceId.equals(deviceId)))
+            return this.deviceId;
+
+        Devices.Add req = prepareDeviceRequest(deviceId);
         String id = req.execute().getId();
         this.deviceId = id;
         if (path != null) {
@@ -207,30 +233,72 @@ public class Iobeam {
     }
 
     /**
-     * Registers this device and gets its device id in an asynchronous fashion. This will not block
-     * the calling thread.
+     * Registers this device and gets an assigned ID in asynchronous fashion. This will not block
+     * the calling thread. If successful, the device ID of this object will be set, and if a file
+     * path was provided, it will be written to disk. If a device ID is already assigned, no
+     * additional operation will be taken.
      *
      * @throws ApiException Thrown if the iobeam client is not initialized.
      */
     public void registerDeviceAsync() throws ApiException {
-        registerDeviceAsync(null);
+        registerDeviceWithIdAsync(null, null);
     }
 
     /**
-     * Registers this device and gets its device id in an asynchronous fashion. This will not block
-     * the calling thread. A callback is provided to let the caller know when this operation has
-     * completed, but the callback code will be running on the background thread.
+     * Registers this device and gets an assigned ID in asynchronous fashion. This will not block
+     * the calling thread. If successful, the device ID of this object will be set, and if a file
+     * path was provided, it will be written to disk. Any provided callback will be run on the
+     * background thread. If a device ID is already assigned, the callback will be executed with
+     * the current ID before returning.
      *
-     * @param callback Callback to call after device is registered.
+     * @param callback Callback for result of the registration.
      * @throws ApiException Thrown if the iobeam client is not initialized.
      */
     public void registerDeviceAsync(RegisterCallback callback) throws ApiException {
-        Devices.Add req = prepareDeviceRequest();
-        if (callback == null) {
-            req.executeAsync(RegisterCallback.getEmptyCallback().getInnerCallback(this));
-        } else {
-            req.executeAsync(callback.getInnerCallback(this));
+        registerDeviceWithIdAsync(null, callback);
+    }
+
+    /**
+     * Registers this device with the provided device ID. This will not block
+     * the calling thread. If successful, the device ID of this object will be set, and if a file
+     * path was provided, it will be written to disk. Device ID must be at least 16 characters.
+     * If a device ID is already assigned, this action will only occur if a non-null deviceId is
+     * provided.
+     *
+     * @param deviceId Desired device ID.
+     * @throws ApiException Thrown if the iobeam client is not initialized.
+     */
+    public void registerDeviceWithIdAsync(String deviceId) throws ApiException {
+        registerDeviceWithIdAsync(deviceId, null);
+    }
+
+    /**
+     * Registers this device with the provided device ID. This will not block
+     * the calling thread. If successful, the device ID of this object will be set, and if a file
+     * path was provided, it will be written to disk. Device ID must be at least 16 characters.
+     * Any provided callback will be run on the background thread. If a device ID is already,
+     * a new ID will be registered only for a non-null deviceId. Otherwise, the callback will be
+     * called with the current ID before returning.
+     *
+     * @param deviceId Desired device ID.
+     * @param callback Callback for result of the registration.
+     * @throws ApiException Thrown if the iobeam client is not initialized.
+     */
+    public void registerDeviceWithIdAsync(String deviceId, RegisterCallback callback)
+        throws ApiException {
+        RestCallback<Device.Id> cb = callback == null ?
+                                     RegisterCallback.getEmptyCallback().getInnerCallback(this) :
+                                     callback.getInnerCallback(this);
+        // If device ID is already set and not explicitly asking for a different one, call
+        // success callback with current ID.
+        boolean alreadySet = this.deviceId != null;
+        if (alreadySet && (deviceId == null || this.deviceId.equals(deviceId))) {
+            cb.completed(new Device.Id(this.deviceId), null);
+            return;
         }
+
+        Devices.Add req = prepareDeviceRequest(deviceId);
+        req.executeAsync(cb);
     }
 
     /**
