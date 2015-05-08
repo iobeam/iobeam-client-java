@@ -173,7 +173,7 @@ public class IobeamTest {
     }
 
     @Test
-    public void testRegisterDevice() throws Exception {
+    public void testRegisterDeviceError() throws Exception {
         boolean error = false;
         try {
             iobeam.registerDevice();
@@ -181,5 +181,51 @@ public class IobeamTest {
             error = true;
         }
         assertTrue(error);
+    }
+
+    @Test
+    public void testRegisterSameIdSync() throws Exception {
+        Iobeam iobeam = new Iobeam(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);
+        String prev = iobeam.getDeviceId();
+        assertNotNull(prev);
+        assertEquals(prev, DEVICE_ID);
+        long start = System.currentTimeMillis();
+        String now = iobeam.registerDeviceWithId(DEVICE_ID);
+        long timed = System.currentTimeMillis() - start;
+        assertNotNull(now);
+        assertEquals(prev, now);
+        assertTrue(timed < 10);  // Should not hit the network; heuristic.
+    }
+
+    @Test
+    public void testRegisterSameIdAsync() throws Exception {
+        Iobeam iobeam = new Iobeam(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);
+        final String prev = iobeam.getDeviceId();
+        assertNotNull(prev);
+        assertEquals(prev, DEVICE_ID);
+        long start = System.currentTimeMillis();
+        iobeam.registerDeviceWithIdAsync(DEVICE_ID);
+        long timed = System.currentTimeMillis() - start;
+        String now = iobeam.getDeviceId();
+        assertNotNull(now);
+        assertEquals(prev, now);
+        assertTrue(timed < 10);  // Should not hit the network; heuristic.
+
+        final long restart = System.currentTimeMillis();
+        RegisterCallback cb = new RegisterCallback() {
+            @Override
+            public void onSuccess(String deviceId) {
+                long timed = System.currentTimeMillis() - restart;
+                assertEquals(prev, deviceId);
+                assertTrue(timed < 10);  // Should not hit the network; heuristic.
+            }
+
+            @Override
+            public void onFailure(Throwable exc, RestRequest req) {
+                assertTrue(false);
+            }
+        };
+        iobeam.registerDeviceWithIdAsync(DEVICE_ID, cb);
+        assertEquals(prev, iobeam.getDeviceId());
     }
 }
