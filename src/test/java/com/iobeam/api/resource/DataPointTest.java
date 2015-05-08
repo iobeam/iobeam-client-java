@@ -3,6 +3,8 @@ package com.iobeam.api.resource;
 import org.json.JSONObject;
 import org.junit.Test;
 
+import java.util.List;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -24,6 +26,9 @@ public class DataPointTest {
                                                  + "     \"time\": 123456789,\n"
                                                  + "     \"value\": \"110\"\n"
                                                  + "}";
+
+    private static final String csvInts = "1,10,100,1000,";
+    private static final String otherReals = "1.0&2&5.0&10.";
 
     @Test
     public void testFromJson() throws Exception {
@@ -65,5 +70,41 @@ public class DataPointTest {
         json = dataPointString.toJson();
         assertEquals(now, json.getLong("time"));
         assertEquals("11.2", json.getString("value"));
+    }
+
+    @Test
+    public void testCsvIntParse() throws Exception {
+        long ts = 1001;
+        List<DataPoint> list = DataPoint.parseDataPoints(csvInts, ",", Long.class, ts);
+        assertEquals(4, list.size());
+        for (DataPoint d : list) {
+            assertEquals(ts, d.getTime());
+        }
+        assertEquals(1l, list.get(0).getValue());
+        assertEquals(10l, list.get(1).getValue());
+        assertEquals(100l, list.get(2).getValue());
+        assertEquals(1000l, list.get(3).getValue());
+    }
+
+    @Test
+    public void testRealParse() throws Exception {
+        long ts = 2001;
+        List<DataPoint> list = DataPoint.parseDataPoints(otherReals, "&", Double.class, ts);
+        assertEquals(4, list.size());
+        for (DataPoint d : list) {
+            assertEquals(ts, d.getTime());
+        }
+        assertEquals(1d, list.get(0).getValue());
+        assertEquals(2d, list.get(1).getValue());
+        assertEquals(5d, list.get(2).getValue());
+        assertEquals(10d, list.get(3).getValue());
+    }
+
+    @Test
+    public void testInvalidTypeParse() throws Exception {
+        // Ideally, this call would be rejected as List is not an appropriate type, but we'll
+        // leave that as a TODO.
+        List<DataPoint> list = DataPoint.parseDataPoints(csvInts, ",", List.class);
+        assertEquals(0, list.size());
     }
 }

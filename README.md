@@ -163,6 +163,15 @@ if you also had a `getHumidity()` function, you could add both data points to th
         Thread.sleep(1000);
     }
 
+Optionally, if your data comes in some delimited format, we offer a way to parse it into a List
+of `DataPoint`s. For example, if you have a String of temperature and humidity in the form of
+`20,60` (temp of 20, humidity of 60) and want to parse it:
+
+    String str = "20,60";
+    List<DataPoint> points = DataPoint.parseDataPoints(str, ",", Integer.class);
+    iobeam.addData("temperature", points.get(0));
+    iobeam.addData("humidity", points.get(1));
+
 
 ### Connecting to the iobeam Cloud ###
 
