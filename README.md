@@ -90,20 +90,27 @@ and `project_token` before hand.
 If you have not pre-created a `device_id`, you'll need to register one:
 
     Iobeam iobeam = new Iobeam(PATH, PROJECT_ID, PROJECT_TOKEN);
-    if (iobeam.getDeviceId() == null)
-        iobeam.registerDeviceAsync(null); // Registers using auto-generated device_id
+    iobeam.registerDeviceAsync(); // Registers using auto-generated device_id
 
 The `device_id` will be saved to disk at the path `PATH`. On Android, this would be set to something
 like `this.getFilesDir().getAbsolutePath()`, which is internal storage for applications. On future
-calls, this on-disk storage will be read first. Therefore we check whether the ID is set before
-registering a new ID.
+calls, this on-disk storage will be read first. If such a `device_id` exists, the
+`registerDeviceAsync()` will do nothing; otherwise, it will get a new random ID from us.
 
 **With a known `device_id`**
 
-If you have created a `device_id` (e.g. using our [CLI](https://github.com/iobeam/iobeam)), you can pass this in the constructor
-and skip the registration step.
+If you have created a `device_id` (e.g. using our [CLI](https://github.com/iobeam/iobeam)),
+you can pass this in the constructor and skip the registration step.
 
     Iobeam iobeam = new Iobeam(PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);
+
+If you have not yet created the `device_id` but would like to specify your own, you can provide it
+as part of the register call.
+
+    Iobeam iobeam = new Iobeam(PATH, PROJECT_ID, PROJECT_TOKEN);
+    iobeam.registerDeviceAsyncWithId("my_desired_device_id");
+
+Your desired `device_id` must be at least 16-characters.
 
 **Advanced: not saving to disk**
 
@@ -155,6 +162,15 @@ if you also had a `getHumidity()` function, you could add both data points to th
 
         Thread.sleep(1000);
     }
+
+Optionally, if your data comes in some delimited format, we offer a way to parse it into a List
+of `DataPoint`s. For example, if you have a String of temperature and humidity in the form of
+`20,60` (temp of 20, humidity of 60) and want to parse it:
+
+    String str = "20,60";
+    List<DataPoint> points = DataPoint.parseDataPoints(str, ",", Integer.class);
+    iobeam.addData("temperature", points.get(0));
+    iobeam.addData("humidity", points.get(1));
 
 
 ### Connecting to the iobeam Cloud ###

@@ -2,10 +2,10 @@ package com.iobeam.api.auth;
 
 import com.iobeam.api.ApiException;
 import com.iobeam.api.client.RestClient;
+import com.iobeam.api.service.Tokens;
 
+import java.io.File;
 import java.io.IOException;
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Default AuthHandler implementation.
@@ -14,42 +14,42 @@ public class DefaultAuthHandler extends AbstractAuthHandler {
 
     private static final String FMT_DEFAULT_PATH = "project_%d.authtoken";
 
-    private final RestClient client;
-    private final long projectId;
+    private RestClient client;
     private final String projectToken;
 
-    public DefaultAuthHandler(final RestClient client,
-                              final long projectId,
-                              final String projectToken,
-                              final String storagePath) {
+    private DefaultAuthHandler(final RestClient client,
+                               final String projectToken,
+                               final String storagePath) {
         super(storagePath);
-        this.client = client;
-        this.projectId = projectId;
         this.projectToken = projectToken;
+        this.client = client;
+        if (client != null) {
+            client.setAuthenticationHandler(this);
+        }
     }
 
-    public DefaultAuthHandler(final RestClient client,
-                              final long projectId,
-                              final String projectToken) {
-        this(client, projectId, projectToken, String.format(FMT_DEFAULT_PATH, projectId));
+    public DefaultAuthHandler(final RestClient client, final long projectId,
+                              final String projectToken, final File storageDir) {
+        this(client, projectToken, storageDir == null ? null : new File(
+            storageDir, String.format(FMT_DEFAULT_PATH, projectId)).getAbsolutePath());
     }
 
-
-    public DefaultAuthHandler(final String apiServer,
-                              final long projectId,
+    public DefaultAuthHandler(final RestClient client, final long projectId,
                               final String projectToken) {
-        this(new RestClient(apiServer), projectId, projectToken,
-             String.format(FMT_DEFAULT_PATH, projectId));
+        this(client, projectId, projectToken, null);
     }
 
-    public DefaultAuthHandler(final long projectId,
-                              final String projectToken) {
-        this(new RestClient(), projectId, projectToken, String.format(FMT_DEFAULT_PATH, projectId));
+    public DefaultAuthHandler(final long projectId, final String projectToken) {
+        this(null, projectId, projectToken);
     }
 
     @Override
     public AuthToken refreshToken() throws IOException, ApiException {
-        return new ProjectBearerAuthToken(projectId, projectToken, new Date(
-            System.currentTimeMillis() + TimeUnit.DAYS.toMillis(30)));
+        if (client != null) {
+            Tokens service = new Tokens(client);
+            Tokens.RefreshProjectToken req = service.refreshProjectToken(projectToken);
+            return req.execute();
+        }
+        return null;
     }
 }

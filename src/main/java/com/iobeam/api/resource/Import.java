@@ -51,7 +51,7 @@ public class Import implements Serializable {
      *
      * @return Mapping from a series name to unordered set of data.
      */
-    public Map<String, Set<DataPoint>> getSources() {
+    public Map<String, Set<DataPoint>> getSeries() {
         return new HashMap<String, Set<DataPoint>>(sources);
     }
 

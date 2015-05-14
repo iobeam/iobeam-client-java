@@ -20,6 +20,25 @@ public abstract class RestRequest<T> {
     private final RequestBuilder builder;
     private final StatusCode expectedCode;
     private final Class<T> responseClass;
+    private final boolean needAuth;
+
+    protected RestRequest(final RestClient client,
+                          final RequestMethod method,
+                          final String path,
+                          final ContentType type,
+                          final Object content,
+                          final StatusCode expectedCode,
+                          final Class<T> responseClass,
+                          final boolean needAuth) {
+        this.builder = new RequestBuilder(client.getBaseUrl() + path);
+        this.client = client;
+        this.responseClass = responseClass;
+        this.expectedCode = expectedCode;
+        this.builder.setRequestMethod(method)
+            .setContentType(type)
+            .setContent(content);
+        this.needAuth = needAuth;
+    }
 
     protected RestRequest(final RestClient client,
                           final RequestMethod method,
@@ -35,6 +54,17 @@ public abstract class RestRequest<T> {
         this.builder.setRequestMethod(method)
             .setContentType(type)
             .setContent(content);
+        this.needAuth = true;
+    }
+
+    protected RestRequest(final RestClient client,
+                          final RequestMethod method,
+                          final String path,
+                          final StatusCode expectedCode,
+                          final Class<T> responseClass,
+                          final boolean needAuth) {
+        this(client, method, path, ContentType.NONE,
+             null, expectedCode, responseClass, needAuth);
     }
 
     protected RestRequest(final RestClient client,
@@ -43,7 +73,7 @@ public abstract class RestRequest<T> {
                           final StatusCode expectedCode,
                           final Class<T> responseClass) {
         this(client, method, path, ContentType.NONE,
-             null, expectedCode, responseClass);
+             null, expectedCode, responseClass, true);
     }
 
     public RequestBuilder getBuilder() {
@@ -57,7 +87,7 @@ public abstract class RestRequest<T> {
      * @return The response result of the REST request.
      */
     public T execute() throws ApiException, IOException {
-        return client.executeRequest(this.builder, expectedCode, responseClass);
+        return client.executeRequest(this.builder, expectedCode, responseClass, needAuth);
     }
 
     /**
