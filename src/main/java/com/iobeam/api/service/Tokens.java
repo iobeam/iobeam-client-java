@@ -1,9 +1,11 @@
 package com.iobeam.api.service;
 
 import com.iobeam.api.auth.ProjectBearerAuthToken;
+import com.iobeam.api.auth.TokenRefresh;
 import com.iobeam.api.auth.UserBearerAuthToken;
 import com.iobeam.api.client.RestClient;
 import com.iobeam.api.client.RestRequest;
+import com.iobeam.api.http.ContentType;
 import com.iobeam.api.http.RequestMethod;
 import com.iobeam.api.http.StatusCode;
 
@@ -55,5 +57,25 @@ public class Tokens {
     public GetProjectToken getProjectToken(long projectId, boolean read, boolean write,
                                            boolean admin) {
         return new GetProjectToken(projectId, read, write, admin);
+    }
+
+    public class RefreshProjectToken extends RestRequest<ProjectBearerAuthToken> {
+
+        private static final String PATH = "/v1/tokens/project";
+
+        public RefreshProjectToken(TokenRefresh tokenReq) {
+            super(client, RequestMethod.POST, PATH,
+                  ContentType.JSON, tokenReq,
+                  StatusCode.OK, ProjectBearerAuthToken.class, false);
+        }
+    }
+
+    public RefreshProjectToken refreshProjectToken(String oldToken) {
+        TokenRefresh tr = new TokenRefresh(oldToken);
+        return new RefreshProjectToken(tr);
+    }
+
+    public RefreshProjectToken refreshProjectToken(ProjectBearerAuthToken oldToken) {
+        return refreshProjectToken(oldToken.getToken());
     }
 }

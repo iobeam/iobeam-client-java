@@ -5,6 +5,7 @@ import com.iobeam.api.RestException;
 import com.iobeam.api.auth.AuthException;
 import com.iobeam.api.auth.AuthHandler;
 import com.iobeam.api.auth.AuthToken;
+import com.iobeam.api.auth.ProjectBearerAuthToken;
 import com.iobeam.api.auth.UserBearerAuthToken;
 import com.iobeam.api.http.ContentType;
 import com.iobeam.api.http.RequestBuilder;
@@ -175,6 +176,10 @@ public class RestClient {
                     logger.info("Acquired auth token. Expires: "
                                 + bt.getExpires() + " token="
                                 + bt.getToken());
+                } else if (token instanceof ProjectBearerAuthToken) {
+                    ProjectBearerAuthToken pt = (ProjectBearerAuthToken) token;
+                    logger.info("Acquired proj token. Expires: " + pt.getExpires() + " token="
+                                + pt.getToken());
                 } else {
                     logger.info("Acquired auth token. Token valid="
                                 + token.isValid());
@@ -274,7 +279,8 @@ public class RestClient {
 
     public <T> T executeRequest(final RequestBuilder builder,
                                 final StatusCode expectedStatusCode,
-                                final Class<T> responseClass)
+                                final Class<T> responseClass,
+                                final boolean needAuth)
         throws IOException, ApiException {
 
         final Object content = builder.getContent();
@@ -310,19 +316,21 @@ public class RestClient {
             try {
                 conn = builder.build();
 
-                AuthToken token = authToken.get();
-                final AuthHandler handler = authHandler.get();
+                if (needAuth) {
+                    AuthToken token = authToken.get();
+                    final AuthHandler handler = authHandler.get();
 
-                if ((token == null || !token.isValid()) && handler != null) {
-                    refreshAuthToken(handler, forceRefreshToken);
-                }
+                    if ((token == null || !token.isValid()) && handler != null) {
+                        refreshAuthToken(handler, forceRefreshToken);
+                    }
 
-                token = authToken.get();
+                    token = authToken.get();
 
-                if (token != null && token.isValid()) {
-                    conn.setRequestProperty("Authorization",
-                                            token.getType() + " " +
-                                            token.getToken());
+                    if (token != null && token.isValid()) {
+                        conn.setRequestProperty("Authorization",
+                                                token.getType() + " " +
+                                                token.getToken());
+                    }
                 }
 
                 logger.info(conn.getRequestMethod() + " " + conn.getURL());

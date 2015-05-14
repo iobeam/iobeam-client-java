@@ -106,8 +106,9 @@ public class Iobeam {
         }
         setDeviceId(deviceId);
 
-        AuthHandler handler = new DefaultAuthHandler(projectId, projectToken);
-        client = new RestClient(API_URL, null, Executors.newSingleThreadExecutor());
+        client = new RestClient(API_URL, Executors.newSingleThreadExecutor());
+        File dir = path != null ? new File(path) : null;
+        AuthHandler handler = new DefaultAuthHandler(client, projectId, projectToken, dir);
         client.setAuthenticationHandler(handler);
     }
 
