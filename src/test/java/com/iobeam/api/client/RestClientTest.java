@@ -4,7 +4,7 @@ import com.iobeam.api.ApiException;
 import com.iobeam.api.auth.AbstractAuthHandler;
 import com.iobeam.api.auth.AuthHandler;
 import com.iobeam.api.auth.AuthToken;
-import com.iobeam.api.auth.UserBearerAuthToken;
+import com.iobeam.api.auth.ProjectBearerAuthToken;
 import com.iobeam.api.http.RequestBuilder;
 import com.iobeam.api.http.StatusCode;
 
@@ -38,7 +38,7 @@ public class RestClientTest {
 
     private AuthToken validToken;
 
-    private AuthToken expiredToken = new UserBearerAuthToken(0, "user", new Date(0));
+    private AuthToken expiredToken = new ProjectBearerAuthToken(0, "faketoken", new Date(0));
 
     private HttpURLConnection conn;
 
@@ -50,8 +50,8 @@ public class RestClientTest {
         doReturn(401).when(conn).getResponseCode();
         doReturn(0).when(conn).getContentLength();
         doReturn(true).when(conn).getDoInput();
-        validToken = new UserBearerAuthToken(0, "user", new Date(
-            System.currentTimeMillis() + 60000));
+        long validTime = System.currentTimeMillis() + 60000;
+        validToken = new ProjectBearerAuthToken(0, "faketokenworks", new Date(validTime));
     }
 
     @Test
@@ -76,7 +76,7 @@ public class RestClientTest {
         client.setAuthenticationHandler(handler);
         client.setAuthToken(expiredToken);
         assertFalse(client.hasValidAuthToken());
-        client.executeRequest(reqBuilder, StatusCode.OK, Void.class);
+        client.executeRequest(reqBuilder, StatusCode.OK, Void.class, true);
         verify(handler).refreshToken();
         assertTrue(client.hasValidAuthToken());
     }
@@ -107,7 +107,7 @@ public class RestClientTest {
         client.setAuthenticationHandler(handler);
         client.setAuthToken(expiredToken);
         assertFalse(client.hasValidAuthToken());
-        client.executeRequest(reqBuilder, StatusCode.OK, Void.class);
+        client.executeRequest(reqBuilder, StatusCode.OK, Void.class, true);
         verify(handler, times(0)).refreshToken();
         assertTrue(client.hasValidAuthToken());
     }
@@ -141,7 +141,7 @@ public class RestClientTest {
         client.setAuthenticationHandler(handler);
         client.setAuthToken(expiredToken);
         assertFalse(client.hasValidAuthToken());
-        client.executeRequest(reqBuilder, StatusCode.OK, Void.class);
+        client.executeRequest(reqBuilder, StatusCode.OK, Void.class, true);
         verify(handler, times(3)).refreshToken();
         assertTrue(client.hasValidAuthToken());
     }

@@ -1,5 +1,6 @@
 package com.iobeam.api.resource;
 
+import com.iobeam.api.auth.ProjectBearerAuthToken;
 import com.iobeam.api.auth.UserBearerAuthToken;
 import com.iobeam.api.client.RestError;
 import com.iobeam.api.resource.annotations.JsonIgnore;
@@ -35,6 +36,8 @@ public class ResourceMapper {
                 return (T) Device.Id.fromJson(json);
             } else if (resourceClass.equals(DeviceList.class)) {
                 return (T) DeviceList.fromJson(json);
+            } else if (resourceClass.equals(ProjectBearerAuthToken.class)) {
+                return (T) ProjectBearerAuthToken.fromJson(json);
             } else if (resourceClass.equals(UserBearerAuthToken.class)) {
                 return (T) UserBearerAuthToken.fromJson(json);
             } else if (resourceClass.equals(RestError.class)) {
