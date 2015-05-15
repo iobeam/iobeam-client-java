@@ -209,7 +209,7 @@ public class IobeamTest {
         String now = iobeam.getDeviceId();
         assertNotNull(now);
         assertEquals(prev, now);
-        assertTrue(timed < 10);  // Should not hit the network; heuristic.
+        assertTrue(timed < 15);  // Should not hit the network; heuristic.
 
         final long restart = System.currentTimeMillis();
         RegisterCallback cb = new RegisterCallback() {
@@ -217,7 +217,7 @@ public class IobeamTest {
             public void onSuccess(String deviceId) {
                 long timed = System.currentTimeMillis() - restart;
                 assertEquals(prev, deviceId);
-                assertTrue(timed < 10);  // Should not hit the network; heuristic.
+                assertTrue(timed < 15);  // Should not hit the network; heuristic.
             }
 
             @Override
