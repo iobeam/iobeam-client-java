@@ -2,10 +2,16 @@ package com.iobeam.api.auth;
 
 import com.iobeam.api.ApiException;
 import com.iobeam.api.client.RestClient;
+import com.iobeam.api.resource.util.Util;
 import com.iobeam.api.service.Tokens;
+import com.iobeam.util.Base64;
+
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
+import java.util.Date;
 
 /**
  * Default AuthHandler implementation.
@@ -14,18 +20,46 @@ public class DefaultAuthHandler extends AbstractAuthHandler {
 
     private static final String FMT_DEFAULT_PATH = "project_%d.authtoken";
 
+    public static ProjectBearerAuthToken parseStringToProjectToken(String t) {
+        if (t == null)
+            return null;
+
+        int firstDot = t.indexOf('.');
+        if (firstDot < 0)
+            return null;
+
+        int secondDot = t.indexOf('.', firstDot + 1);
+        String substr = t.substring(firstDot + 1, secondDot);
+        byte[] decoded = Base64.decode(substr);
+        if (decoded != null) {
+            String s = new String(decoded);
+            JSONObject temp = new JSONObject(s);
+            temp.put("project_id", temp.getLong("pid"));
+            temp.put("token", t);
+            temp.put("expires", Util.DATE_FORMAT.format(new Date(temp.getLong("exp") * 1000)));
+            try {
+                return ProjectBearerAuthToken.fromJson(temp);
+            } catch (ParseException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+        return null;
+    }
+
     private RestClient client;
-    private final String projectToken;
+    private final ProjectBearerAuthToken token;
 
     private DefaultAuthHandler(final RestClient client,
                                final String projectToken,
                                final String storagePath) {
         super(storagePath);
-        this.projectToken = projectToken;
         this.client = client;
         if (client != null) {
             client.setAuthenticationHandler(this);
         }
+        token = parseStringToProjectToken(projectToken);
+        writeToken(token);
     }
 
     public DefaultAuthHandler(final RestClient client, final long projectId,
@@ -47,7 +81,7 @@ public class DefaultAuthHandler extends AbstractAuthHandler {
     public AuthToken refreshToken() throws IOException, ApiException {
         if (client != null) {
             Tokens service = new Tokens(client);
-            Tokens.RefreshProjectToken req = service.refreshProjectToken(projectToken);
+            Tokens.RefreshProjectToken req = service.refreshProjectToken(token.getToken());
             return req.execute();
         }
         return null;
