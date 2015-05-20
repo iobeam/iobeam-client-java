@@ -6,7 +6,7 @@ This is a Java library for sending data to the **iobeam Cloud**, e.g., from with
 For more information on the iobeam Cloud, please read our [full API documentation](http://docs.iobeam.com).
 
 *Please note that we are currently invite-only. You will need an invite 
-to generate a valid token and use our APIs. (Sign up [here](http://iobeam.com for an invite).)*
+to generate a valid token and use our APIs. (Sign up [here](http://iobeam.com) for an invite.)*
 
 ## Sample apps ##
 
@@ -48,7 +48,7 @@ If you are building an Android app, add the following lines to your `app/build.g
 
     dependencies {
         ...
-        compile 'com.iobeam:iobeam-client-java:0.2'
+        compile 'com.iobeam:iobeam-client-java:0.3.1'
     }
 
 It is also available on Maven Central.
