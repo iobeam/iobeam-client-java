@@ -5,7 +5,9 @@ import org.json.JSONObject;
 import org.junit.Test;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -62,7 +64,22 @@ public class ImportTest {
     }
 
     @Test
-    public void testFromJson() throws Exception {
+    public void testAddDataSet() throws Exception {
+        Import imp = new Import(TEST_DEVICE_ID, 1000);
+        assertNotNull(imp.getSeries());
+        assertEquals(0, imp.getSeries().size());
+
+        Set<DataPoint> set1 = new HashSet<DataPoint>();
+        DataPoint d1 = new DataPoint(10, 100);
+        DataPoint d2 = new DataPoint(20, 110);
+        DataPoint d3 = new DataPoint(30, 115);
+        set1.add(d1);
+        set1.add(d2);
+        set1.add(d3);
+        imp.addDataPointSet("series1", set1);
+        assertNotNull(imp.getDataSeries("series1"));
+        assertEquals(3, imp.getDataSeries("series1").size());
+        assertEquals(set1, imp.getDataSeries("series1"));
     }
 
     @Test

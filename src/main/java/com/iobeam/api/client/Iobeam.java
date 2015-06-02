@@ -14,12 +14,12 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
 
 /**
- * The Iobeam client. An instance of this is initialized with <tt>init()</tt> for a particular
- * project. This instance is passed to services (for example, Imports).
+ * The Iobeam client.
  */
 public class Iobeam {
 
@@ -47,6 +47,27 @@ public class Iobeam {
         }
     }
 
+    /**
+     * DataCallback used when autoRetry is set.
+     */
+    private static final class ReinsertDataCallback extends DataCallback {
+
+        private final Iobeam client;
+
+        public ReinsertDataCallback(Iobeam iobeam) {
+            this.client = iobeam;
+        }
+
+        @Override
+        public void onSuccess() {
+        }
+
+        @Override
+        public void onFailure(Throwable exc, Map<String, Set<DataPoint>> data) {
+            client.addBulkData(data);
+        }
+    }
+
     String path = null;
     long projectId = -1;
     String projectToken = null;
@@ -55,6 +76,7 @@ public class Iobeam {
     private RestClient client = null;
     private final Object dataStoreLock = new Object();
     private Import dataStore;
+    private boolean autoRetry = false;
 
 
     /**
@@ -152,6 +174,19 @@ public class Iobeam {
                 f.delete();
             }
         }
+    }
+
+    public boolean getAutoRetry() {
+        return this.autoRetry;
+    }
+
+    /**
+     * Sets whether this Iobeam object automatically tries to resend data that fails.
+     *
+     * @param retry Whether to retry or not.
+     */
+    public void setAutoRetry(boolean retry) {
+        this.autoRetry = retry;
     }
 
     private void persistDeviceId() throws CouldNotPersistException {
@@ -343,6 +378,20 @@ public class Iobeam {
         }
     }
 
+    void addBulkData(Map<String, Set<DataPoint>> data) {
+        if (data == null)
+            return;
+
+        synchronized (dataStoreLock) {
+            if (dataStore == null) {
+                dataStore = new Import(deviceId, projectId);
+            }
+            for (String series : data.keySet()) {
+                dataStore.addDataPointSet(series, data.get(series));
+            }
+        }
+    }
+
     /**
      * Returns the size of the data set in a particular series.
      *
@@ -415,8 +464,10 @@ public class Iobeam {
      */
     public void sendAsync(DataCallback callback) throws ApiException {
         Imports.Submit req = prepareDataRequest();
-        if (callback == null) {
+        if (callback == null && !autoRetry) {
             req.executeAsync();
+        } else if (callback == null) {
+            req.executeAsync(new ReinsertDataCallback(this).innerCallback);
         } else {
             req.executeAsync(callback.innerCallback);
         }

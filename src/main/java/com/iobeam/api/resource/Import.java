@@ -82,6 +82,24 @@ public class Import implements Serializable {
     }
 
     /**
+     * Adds a set of `DataPoint`s to a series.
+     *
+     * @param series     The series the DataPoints should be added to. If the series doesn't exist,
+     *                   it will be created.
+     * @param dataPoints Data to be added.
+     */
+    public void addDataPointSet(String series, Set<DataPoint> dataPoints) {
+        Set<DataPoint> set = sources.get(series);
+        if (set == null) {
+            set = new HashSet<DataPoint>(dataPoints);
+            sources.put(series, set);
+        } else {
+            set.addAll(dataPoints);
+        }
+
+    }
+
+    /**
      * Custom serialization method for this object to JSON.
      *
      * @param out In-out parameter that maps JSON keys to their values.
