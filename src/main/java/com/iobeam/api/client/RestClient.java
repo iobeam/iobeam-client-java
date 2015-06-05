@@ -333,9 +333,8 @@ public class RestClient {
                     }
                 }
 
-                logger.info(conn.getRequestMethod() + " " + conn.getURL());
-
                 conn.connect();
+                logger.info(conn.getRequestMethod() + " " + conn.getURL());
 
                 if (output != null) {
                     out = new DataOutputStream(conn.getOutputStream());
@@ -373,12 +372,13 @@ public class RestClient {
                 } else {
                     logger.fine("Connection can't do input");
                 }
+                logger.fine("Request successful.");
                 break;
             } catch (EOFException e) {
                 if (retryCount++ == MAX_HTTP_RETRIES) {
                     throw e;
                 }
-                logger.fine("Request retry " + retryCount);
+                logger.warning("Request failed, retrying... (" + retryCount + ")");
             } catch (RuntimeException e) {
                 logger.fine("Got exception: " + e.getMessage());
                 throw e;
