@@ -14,7 +14,7 @@ import static org.junit.Assert.assertTrue;
 public class DeviceTest {
 
     private static final String TEST_DEVICE_ID = "test1234only5678";
-    private static final String TEST_DATE_STRING = "2015-03-01 20:55:21-0400";
+    private static final String TEST_DATE_STRING = "2015-03-01 20:55:21 -0400";
 
     private static final String jsonDevice = "{\n"
                                              + "     \"device_id\": \"" + TEST_DEVICE_ID + "\",\n"

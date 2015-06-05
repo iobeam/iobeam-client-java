@@ -8,5 +8,5 @@ import java.text.SimpleDateFormat;
 public class Util {
 
     public static final SimpleDateFormat DATE_FORMAT =
-        new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ");
+        new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
 }
