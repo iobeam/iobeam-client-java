@@ -112,6 +112,16 @@ public class IobeamTest {
     }
 
     @Test
+    public void testSetAutoRetry() throws Exception {
+        Iobeam iobeam = new Iobeam(null, PROJECT_ID, PROJECT_TOKEN);
+        assertFalse(iobeam.getAutoRetry());
+        iobeam.setAutoRetry(true);
+        assertTrue(iobeam.getAutoRetry());
+        iobeam.setAutoRetry(false);
+        assertFalse(iobeam.getAutoRetry());
+    }
+
+    @Test
     public void testSetDeviceIdNoPersist() throws Exception {
         File f = new File(FILE_PATH, Iobeam.DEVICE_FILENAME);
 
@@ -209,7 +219,7 @@ public class IobeamTest {
         String now = iobeam.getDeviceId();
         assertNotNull(now);
         assertEquals(prev, now);
-        assertTrue(timed < 15);  // Should not hit the network; heuristic.
+        assertTrue(timed < 20);  // Should not hit the network; heuristic.
 
         final long restart = System.currentTimeMillis();
         RegisterCallback cb = new RegisterCallback() {
@@ -217,7 +227,7 @@ public class IobeamTest {
             public void onSuccess(String deviceId) {
                 long timed = System.currentTimeMillis() - restart;
                 assertEquals(prev, deviceId);
-                assertTrue(timed < 15);  // Should not hit the network; heuristic.
+                assertTrue(timed < 20);  // Should not hit the network; heuristic.
             }
 
             @Override
