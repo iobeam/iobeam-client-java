@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -434,18 +435,37 @@ public class Iobeam {
      * This call will take a snapshot of the data store at this moment and send it; future data adds
      * will be to a NEW data store.
      *
+     * If `autoRetry` is set, failed requests will add the previous data to the new data store.
+     *
      * @throws ApiException Thrown is the client is not initialized or if the device id has not been
      *                      set.
      * @throws IOException  Thrown if there are network issues connecting to iobeam cloud.
      */
     public void send() throws ApiException, IOException {
         Imports.Submit req = prepareDataRequest();
-        req.execute();
+        try {
+            req.execute();
+        } catch (Exception e) {
+            if (autoRetry) {
+                Import imp = (Import) req.getBuilder().getContent();
+                Map<String, Set<DataPoint>> data = new HashMap<String, Set<DataPoint>>();
+                data.putAll(imp.getSeries());
+                addBulkData(data);
+            }
+
+            // TODO: When we target Java7, we can just do a multi-exception catch
+            if (e instanceof ApiException)
+                throw (ApiException) e;
+            else if (e instanceof IOException)
+                throw (IOException) e;
+        }
     }
 
     /**
      * Asynchronous version of send() that will not block the calling thread. No callback provided,
      * same as calling sendAsync(null).
+     *
+     * If `autoRetry` is set, failed requests will add the previous data to the new data store.
      *
      * @throws ApiException Thrown is the client is not initialized or if the device id has not been
      *                      set.
@@ -457,6 +477,8 @@ public class Iobeam {
     /**
      * Asynchronous version of send() that will not block the calling thread. Any provided callback
      * will be run on the background thread when the operation completes.
+     *
+     * If `autoRetry` is set, failed requests will add the previous data to the new data store.
      *
      * @param callback Callback for when the operation completes.
      * @throws ApiException Thrown is the client is not initialized or if the device id has not been
