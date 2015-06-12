@@ -14,12 +14,12 @@ import java.util.logging.Logger;
 /**
  * Tokens service.
  */
-public class Tokens {
+public class TokenService {
 
-    private final static Logger logger = Logger.getLogger(Tokens.class.getName());
+    private final static Logger logger = Logger.getLogger(TokenService.class.getName());
     private final RestClient client;
 
-    public Tokens(final RestClient client) {
+    public TokenService(final RestClient client) {
         this.client = client;
     }
 

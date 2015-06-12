@@ -3,7 +3,7 @@ package com.iobeam.api.auth;
 import com.iobeam.api.ApiException;
 import com.iobeam.api.client.RestClient;
 import com.iobeam.api.resource.util.Util;
-import com.iobeam.api.service.Tokens;
+import com.iobeam.api.service.TokenService;
 import com.iobeam.util.Base64;
 
 import org.json.JSONObject;
@@ -80,8 +80,8 @@ public class DefaultAuthHandler extends AbstractAuthHandler {
     @Override
     public AuthToken refreshToken() throws IOException, ApiException {
         if (client != null) {
-            Tokens service = new Tokens(client);
-            Tokens.RefreshProjectToken req = service.refreshProjectToken(token.getToken());
+            TokenService service = new TokenService(client);
+            TokenService.RefreshProjectToken req = service.refreshProjectToken(token.getToken());
             return req.execute();
         }
         return null;

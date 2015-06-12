@@ -6,8 +6,8 @@ import com.iobeam.api.auth.DefaultAuthHandler;
 import com.iobeam.api.resource.DataPoint;
 import com.iobeam.api.resource.Device;
 import com.iobeam.api.resource.Import;
-import com.iobeam.api.service.Devices;
-import com.iobeam.api.service.Imports;
+import com.iobeam.api.service.DeviceService;
+import com.iobeam.api.service.ImportService;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -218,11 +218,11 @@ public class Iobeam {
         return null;
     }
 
-    private Devices.Add prepareDeviceRequest(String deviceId) throws NotInitializedException {
+    private DeviceService.Add prepareDeviceRequest(String deviceId) throws NotInitializedException {
         if (!isInitialized()) {
             throw new NotInitializedException();
         }
-        Devices service = new Devices(client);
+        DeviceService service = new DeviceService(client);
         return service.add(projectId, deviceId, null, null, null);
     }
 
@@ -262,7 +262,7 @@ public class Iobeam {
 
         // Make sure to unset before attempting, so as not to reuse old ID if it fails.
         this.deviceId = null;
-        Devices.Add req = prepareDeviceRequest(deviceId);
+        DeviceService.Add req = prepareDeviceRequest(deviceId);
         String id = req.execute().getId();
         this.deviceId = id;
         if (path != null) {
@@ -337,7 +337,7 @@ public class Iobeam {
 
         // Make sure to unset before attempting, so as not to reuse old ID if it fails.
         this.deviceId = null;
-        Devices.Add req = prepareDeviceRequest(deviceId);
+        DeviceService.Add req = prepareDeviceRequest(deviceId);
         req.executeAsync(cb);
     }
 
@@ -412,7 +412,7 @@ public class Iobeam {
         }
     }
 
-    private List<Imports.Submit> prepareDataRequests() throws ApiException {
+    private List<ImportService.Submit> prepareDataRequests() throws ApiException {
         if (!isInitialized()) {
             throw new NotInitializedException();
         }
@@ -428,7 +428,7 @@ public class Iobeam {
         }
         data.setDeviceId(deviceId);
 
-        Imports service = new Imports(client);
+        ImportService service = new ImportService(client);
         return service.submit(data);
     }
 
@@ -445,8 +445,8 @@ public class Iobeam {
      * @throws IOException  Thrown if there are network issues connecting to iobeam cloud.
      */
     public void send() throws ApiException, IOException {
-        List<Imports.Submit> reqs = prepareDataRequests();
-        for (Imports.Submit req : reqs) {
+        List<ImportService.Submit> reqs = prepareDataRequests();
+        for (ImportService.Submit req : reqs) {
             try {
                 req.execute();
             } catch (Exception e) {
@@ -490,8 +490,8 @@ public class Iobeam {
      *                      set.
      */
     public void sendAsync(DataCallback callback) throws ApiException {
-        List<Imports.Submit> reqs = prepareDataRequests();
-        for (Imports.Submit req : reqs) {
+        List<ImportService.Submit> reqs = prepareDataRequests();
+        for (ImportService.Submit req : reqs) {
             if (callback == null && !autoRetry) {
                 req.executeAsync();
             } else if (callback == null) {

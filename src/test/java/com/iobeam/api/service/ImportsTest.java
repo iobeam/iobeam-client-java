@@ -14,9 +14,9 @@ public class ImportsTest {
 
     private static final String TEST_DEVICE_ID = "test1234only5678";
 
-    private final Imports service = new Imports(new RestClient());
+    private final ImportService service = new ImportService(new RestClient());
 
-    private Import getSubmitData(Imports.Submit req) {
+    private Import getSubmitData(ImportService.Submit req) {
         return (Import) req.getBuilder().getContent();
     }
 
@@ -24,31 +24,31 @@ public class ImportsTest {
     public void testSmallImport() throws Exception {
         Import imp = new Import(TEST_DEVICE_ID, 1000);
 
-        for (int i = 0; i < Imports.REQ_MAX_POINTS; i++) {
+        for (int i = 0; i < ImportService.REQ_MAX_POINTS; i++) {
             imp.addDataPoint("series1", new DataPoint(i));
         }
-        List<Imports.Submit> reqs = service.submit(imp);
+        List<ImportService.Submit> reqs = service.submit(imp);
         assertEquals(1, reqs.size());
     }
 
     @Test
     public void testSingleBigSeriesImport() throws Exception {
         Import imp = new Import(TEST_DEVICE_ID, 1000);
-        long total = Imports.REQ_MAX_POINTS * 2;
+        long total = ImportService.REQ_MAX_POINTS * 2;
 
         for (int i = 0; i < total; i++) {
             imp.addDataPoint("series1", new DataPoint(i));
         }
-        List<Imports.Submit> reqs = service.submit(imp);
+        List<ImportService.Submit> reqs = service.submit(imp);
         assertEquals(2, reqs.size());
-        assertEquals(Imports.REQ_MAX_POINTS, getSubmitData(reqs.get(0)).getTotalSize());
-        assertEquals(Imports.REQ_MAX_POINTS, getSubmitData(reqs.get(1)).getTotalSize());
+        assertEquals(ImportService.REQ_MAX_POINTS, getSubmitData(reqs.get(0)).getTotalSize());
+        assertEquals(ImportService.REQ_MAX_POINTS, getSubmitData(reqs.get(1)).getTotalSize());
     }
 
     @Test
     public void testSmallEnoughSeries() throws Exception {
         Import imp = new Import(TEST_DEVICE_ID, 1000);
-        long total = (long)(Imports.REQ_MAX_POINTS * 1.5);
+        long total = (long)(ImportService.REQ_MAX_POINTS * 1.5);
         long midway = total / 2;
 
         for (int i = 0; i < total; i++) {
@@ -58,7 +58,7 @@ public class ImportsTest {
                 imp.addDataPoint("series2", new DataPoint(i));
         }
 
-        List<Imports.Submit> reqs = service.submit(imp);
+        List<ImportService.Submit> reqs = service.submit(imp);
         assertEquals(2, reqs.size());
         assertEquals(midway, getSubmitData(reqs.get(0)).getTotalSize());
         assertEquals(total - midway, getSubmitData(reqs.get(1)).getTotalSize());
@@ -67,8 +67,8 @@ public class ImportsTest {
     @Test
     public void testOneSmallOneBigSeries() throws Exception {
         Import imp = new Import(TEST_DEVICE_ID, 1000);
-        long total = (long)(Imports.REQ_MAX_POINTS * 2);
-        long midway = Imports.REQ_MAX_POINTS / 2;
+        long total = (long)(ImportService.REQ_MAX_POINTS * 2);
+        long midway = ImportService.REQ_MAX_POINTS / 2;
 
         for (int i = 0; i < total; i++) {
             if (i < midway)
@@ -77,7 +77,7 @@ public class ImportsTest {
                 imp.addDataPoint("series2", new DataPoint(i));
         }
 
-        List<Imports.Submit> reqs = service.submit(imp);
+        List<ImportService.Submit> reqs = service.submit(imp);
         assertEquals(3, reqs.size());
 
         long series1Size = 0;

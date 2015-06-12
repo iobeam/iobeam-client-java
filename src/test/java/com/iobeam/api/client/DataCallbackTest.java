@@ -2,7 +2,7 @@ package com.iobeam.api.client;
 
 import com.iobeam.api.resource.DataPoint;
 import com.iobeam.api.resource.Import;
-import com.iobeam.api.service.Imports;
+import com.iobeam.api.service.ImportService;
 
 import org.junit.Test;
 
@@ -28,8 +28,8 @@ public class DataCallbackTest {
         imp.addDataPoint("series2", dp3);
 
         RestClient client = new RestClient();
-        Imports service = new Imports(client);
-        Imports.Submit req = service.submit(imp).get(0);
+        ImportService service = new ImportService(client);
+        ImportService.Submit req = service.submit(imp).get(0);
 
         DataCallback cb = new DataCallback() {
             @Override

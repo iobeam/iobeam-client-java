@@ -15,12 +15,12 @@ import java.util.Date;
  * add new devices to projects, remove devices, get all the devices currently in a project, and get
  * a particular device.
  */
-public class Devices {
+public class DeviceService {
 
     private static final String PATH = "/v1/devices";
     private final RestClient client;
 
-    public Devices(final RestClient client) {
+    public DeviceService(final RestClient client) {
         this.client = client;
     }
 

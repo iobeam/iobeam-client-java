@@ -17,14 +17,14 @@ import java.util.logging.Logger;
 /**
  * Import service.
  */
-public class Imports {
+public class ImportService {
 
-    private final static Logger logger = Logger.getLogger(Imports.class.getName());
+    private final static Logger logger = Logger.getLogger(ImportService.class.getName());
     final static int REQ_MAX_POINTS = 1000;
 
     private final RestClient client;
 
-    public Imports(final RestClient client) {
+    public ImportService(final RestClient client) {
         this.client = client;
     }
 
