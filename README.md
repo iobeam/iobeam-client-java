@@ -42,13 +42,14 @@ It will be installed as artifact ```iobeam-client-java``` under the group ```com
 If you are building an Android app, add the following lines to your `app/build.gradle` file:
 
     repositories {
+        ...
         mavenLocal()
         mavenCentral()
     }
 
     dependencies {
         ...
-        compile 'com.iobeam:iobeam-client-java:0.3.1'
+        compile 'com.iobeam:iobeam-client-java:0.4.0'
     }
 
 It is also available on Maven Central.
@@ -85,40 +86,44 @@ using the iobeam APIs or Command-line interface. Write down your new `project_id
 There are several ways to initialize the `Iobeam` library. All require that you have `project_id`
 and `project_token` before hand.
 
-**Without a pre-known `device_id`**
+**Without a registered `device_id`**
 
-If you have not pre-created a `device_id`, you'll need to register one:
+If you have not previously registered a `device_id` with iobeam, either via the CLI or our website,
+you will need to register one in code. There are two ways to register a `device_id`:
+
+(1) Let iobeam generate one for you:
 
     Iobeam iobeam = new Iobeam(PATH, PROJECT_ID, PROJECT_TOKEN);
-    iobeam.registerDeviceAsync(); // Registers using auto-generated device_id
+    iobeam.registerDeviceAsync();
+
+(2) Provide your own (must be unique to your project):
+
+    Iobeam iobeam = new Iobeam(PATH, PROJECT_ID, PROJECT_TOKEN);
+    iobeam.registerDeviceWithIdAsync("my_desired_device_id");
 
 The `device_id` will be saved to disk at the path `PATH`. On Android, this would be set to something
-like `this.getFilesDir().getAbsolutePath()`, which is internal storage for applications. On future
-calls, this on-disk storage will be read first. If such a `device_id` exists, the
-`registerDeviceAsync()` will do nothing; otherwise, it will get a new random ID from us.
+like `this.getFilesDir().getAbsolutePath()` , which is internal storage for applications. On future
+calls, this on-disk storage will be read first. If a `device_id` exists, the
+`registerDeviceAsync()` will do nothing; otherwise, it will get a new random ID from us. If you
+provide a _different_ `device_id` to `registerDeviceWithIdAsync()`, the old one will be replaced.
 
-**With a known `device_id`**
+**With a registered `device_id`**
 
-If you have created a `device_id` (e.g. using our [CLI](https://github.com/iobeam/iobeam)),
+If you have registered a `device_id` (e.g. using our [CLI](https://github.com/iobeam/iobeam)),
 you can pass this in the constructor and skip the registration step.
 
     Iobeam iobeam = new Iobeam(PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);
-
-If you have not yet created the `device_id` but would like to specify your own, you can provide it
-as part of the register call.
-
-    Iobeam iobeam = new Iobeam(PATH, PROJECT_ID, PROJECT_TOKEN);
-    iobeam.registerDeviceAsyncWithId("my_desired_device_id");
-
-Your desired `device_id` must be at least 16-characters.
+    
+You *must* have registered some other way (CLI, website, previous installation, etc) for this to
+work.
 
 **Advanced: not saving to disk**
 
 If you don't want the `device_id` to be automatically stored for you, set the `path` parameter in
 either constructor to be `null`:
 
-    Iobeam iobeam = new Iobeam(null, PROJECT_ID, PROJECT_TOKEN);  // without known id
-    Iobeam iobeam = new Iobeam(null, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);  // with known id
+    Iobeam iobeam = new Iobeam(null, PROJECT_ID, PROJECT_TOKEN);  // without registered id
+    Iobeam iobeam = new Iobeam(null, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);  // with registered id
 
 This is useful for cases where you want to persist the ID yourself (e.g. in a settings file), or if
 you are making `Iobeam` objects that are temporary. For example, if the device you are using acts
