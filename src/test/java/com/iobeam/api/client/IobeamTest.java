@@ -194,7 +194,7 @@ public class IobeamTest {
     }
 
     @Test
-    public void testRegisterSameIdSync() throws Exception {
+    public synchronized void testRegisterSameIdSync() throws Exception {
         Iobeam iobeam = new Iobeam(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);
         String prev = iobeam.getDeviceId();
         assertNotNull(prev);
@@ -208,7 +208,7 @@ public class IobeamTest {
     }
 
     @Test
-    public void testRegisterSameIdAsync() throws Exception {
+    public synchronized void testRegisterSameIdAsync() throws Exception {
         Iobeam iobeam = new Iobeam(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);
         final String prev = iobeam.getDeviceId();
         assertNotNull(prev);
@@ -219,7 +219,7 @@ public class IobeamTest {
         String now = iobeam.getDeviceId();
         assertNotNull(now);
         assertEquals(prev, now);
-        assertTrue(timed < 20);  // Should not hit the network; heuristic.
+        assertTrue(timed < 10);  // Should not hit the network; heuristic.
 
         final long restart = System.currentTimeMillis();
         RegisterCallback cb = new RegisterCallback() {
@@ -227,7 +227,7 @@ public class IobeamTest {
             public void onSuccess(String deviceId) {
                 long timed = System.currentTimeMillis() - restart;
                 assertEquals(prev, deviceId);
-                assertTrue(timed < 20);  // Should not hit the network; heuristic.
+                assertTrue(timed < 10);  // Should not hit the network; heuristic.
             }
 
             @Override
@@ -237,5 +237,34 @@ public class IobeamTest {
         };
         iobeam.registerDeviceWithIdAsync(DEVICE_ID, cb);
         assertEquals(prev, iobeam.getDeviceId());
+    }
+
+    @Test
+    public synchronized void testRegisterDifferentIdSync() throws Exception {
+        Iobeam iobeam = new Iobeam(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);
+        final String prev = iobeam.getDeviceId();
+        assertNotNull(prev);
+        assertEquals(prev, DEVICE_ID);
+
+        // Will hit the network, but credentials are invalid anyway.
+        try {
+            iobeam.registerDeviceWithId("new_device_id");
+        } catch (Exception e) {
+            // expected, ignore.
+        }
+        assertNull(iobeam.getDeviceId());
+    }
+
+    @Test
+    public synchronized void testRegisterDifferentIdAsync() throws Exception {
+        Iobeam iobeam = new Iobeam(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);
+        final String prev = iobeam.getDeviceId();
+        assertNotNull(prev);
+        assertEquals(prev, DEVICE_ID);
+
+
+        iobeam.registerDeviceWithIdAsync("new_device_id");
+        // Should be reset before request goes out anyway.
+        assertNull(iobeam.getDeviceId());
     }
 }

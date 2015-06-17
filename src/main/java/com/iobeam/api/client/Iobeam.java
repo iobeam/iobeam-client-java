@@ -255,11 +255,12 @@ public class Iobeam {
      */
     public String registerDeviceWithId(String deviceId) throws ApiException, IOException {
         boolean alreadySet = this.deviceId != null;
-        // If device ID is already set and not explicitly asking for a different one, return
-        // current ID.
+        // If device ID is set and not explicitly asking for a different one, return current ID.
         if (alreadySet && (deviceId == null || this.deviceId.equals(deviceId)))
             return this.deviceId;
 
+        // Make sure to unset before attempting, so as not to reuse old ID if it fails.
+        this.deviceId = null;
         Devices.Add req = prepareDeviceRequest(deviceId);
         String id = req.execute().getId();
         this.deviceId = id;
@@ -326,14 +327,15 @@ public class Iobeam {
         RestCallback<Device.Id> cb = callback == null ?
                                      RegisterCallback.getEmptyCallback().getInnerCallback(this) :
                                      callback.getInnerCallback(this);
-        // If device ID is already set and not explicitly asking for a different one, call
-        // success callback with current ID.
+        // If device ID is set and not explicitly asking for a different one, return current ID.
         boolean alreadySet = this.deviceId != null;
         if (alreadySet && (deviceId == null || this.deviceId.equals(deviceId))) {
             cb.completed(new Device.Id(this.deviceId), null);
             return;
         }
 
+        // Make sure to unset before attempting, so as not to reuse old ID if it fails.
+        this.deviceId = null;
         Devices.Add req = prepareDeviceRequest(deviceId);
         req.executeAsync(cb);
     }
