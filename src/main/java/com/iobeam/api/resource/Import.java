@@ -46,6 +46,14 @@ public class Import implements Serializable {
         return projectId;
     }
 
+    public long getTotalSize() {
+        int total = 0;
+        for (Set<DataPoint> set : sources.values()) {
+            total += set.size();
+        }
+        return total;
+    }
+
     /**
      * Gets a mapping from series to an unordered set of DataPoints.
      *

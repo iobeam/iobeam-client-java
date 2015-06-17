@@ -49,6 +49,7 @@ public class ImportTest {
         imp.addDataPoint("series1", d3);
         assertEquals(3, imp.getDataSeries("series1").size());
         assertEquals(1, imp.getSeries().size());
+        assertEquals(3, imp.getTotalSize());
         assertTrue(imp.getDataSeries("series1").contains(d1));
         assertTrue(imp.getDataSeries("series1").contains(d2));
         assertTrue(imp.getDataSeries("series1").contains(d3));
@@ -59,6 +60,7 @@ public class ImportTest {
         imp.addDataPoint("series2", d5);
         assertEquals(2, imp.getSeries().size());
         assertEquals(2, imp.getDataSeries("series2").size());
+        assertEquals(5, imp.getTotalSize());
         assertTrue(imp.getDataSeries("series2").contains(d4));
         assertTrue(imp.getDataSeries("series2").contains(d5));
     }
@@ -79,6 +81,7 @@ public class ImportTest {
         imp.addDataPointSet("series1", set1);
         assertNotNull(imp.getDataSeries("series1"));
         assertEquals(3, imp.getDataSeries("series1").size());
+        assertEquals(3, imp.getTotalSize());
         assertEquals(set1, imp.getDataSeries("series1"));
     }
 

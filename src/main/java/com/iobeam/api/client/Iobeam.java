@@ -15,6 +15,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -411,7 +412,7 @@ public class Iobeam {
         }
     }
 
-    private Imports.Submit prepareDataRequest() throws ApiException {
+    private List<Imports.Submit> prepareDataRequests() throws ApiException {
         if (!isInitialized()) {
             throw new NotInitializedException();
         }
@@ -444,22 +445,24 @@ public class Iobeam {
      * @throws IOException  Thrown if there are network issues connecting to iobeam cloud.
      */
     public void send() throws ApiException, IOException {
-        Imports.Submit req = prepareDataRequest();
-        try {
-            req.execute();
-        } catch (Exception e) {
-            if (autoRetry) {
-                Import imp = (Import) req.getBuilder().getContent();
-                Map<String, Set<DataPoint>> data = new HashMap<String, Set<DataPoint>>();
-                data.putAll(imp.getSeries());
-                addBulkData(data);
-            }
+        List<Imports.Submit> reqs = prepareDataRequests();
+        for (Imports.Submit req : reqs) {
+            try {
+                req.execute();
+            } catch (Exception e) {
+                if (autoRetry) {
+                    Import imp = (Import) req.getBuilder().getContent();
+                    Map<String, Set<DataPoint>> data = new HashMap<String, Set<DataPoint>>();
+                    data.putAll(imp.getSeries());
+                    addBulkData(data);
+                }
 
-            // TODO: When we target Java7, we can just do a multi-exception catch
-            if (e instanceof ApiException)
-                throw (ApiException) e;
-            else if (e instanceof IOException)
-                throw (IOException) e;
+                // TODO: When we target Java7, we can just do a multi-exception catch
+                if (e instanceof ApiException)
+                    throw (ApiException) e;
+                else if (e instanceof IOException)
+                    throw (IOException) e;
+            }
         }
     }
 
@@ -487,13 +490,15 @@ public class Iobeam {
      *                      set.
      */
     public void sendAsync(DataCallback callback) throws ApiException {
-        Imports.Submit req = prepareDataRequest();
-        if (callback == null && !autoRetry) {
-            req.executeAsync();
-        } else if (callback == null) {
-            req.executeAsync(new ReinsertDataCallback(this).innerCallback);
-        } else {
-            req.executeAsync(callback.innerCallback);
+        List<Imports.Submit> reqs = prepareDataRequests();
+        for (Imports.Submit req : reqs) {
+            if (callback == null && !autoRetry) {
+                req.executeAsync();
+            } else if (callback == null) {
+                req.executeAsync(new ReinsertDataCallback(this).innerCallback);
+            } else {
+                req.executeAsync(callback.innerCallback);
+            }
         }
     }
 }

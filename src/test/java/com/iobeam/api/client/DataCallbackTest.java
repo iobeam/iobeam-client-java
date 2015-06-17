@@ -29,7 +29,7 @@ public class DataCallbackTest {
 
         RestClient client = new RestClient();
         Imports service = new Imports(client);
-        Imports.Submit req = service.submit(imp);
+        Imports.Submit req = service.submit(imp).get(0);
 
         DataCallback cb = new DataCallback() {
             @Override
