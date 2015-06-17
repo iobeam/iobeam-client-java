@@ -210,15 +210,15 @@ public class IobeamTest {
     @Test
     public synchronized void testRegisterSameIdAsync() throws Exception {
         Iobeam iobeam = new Iobeam(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);
-        final String prev = iobeam.getDeviceId();
+        String prev = iobeam.getDeviceId();
         assertNotNull(prev);
-        assertEquals(prev, DEVICE_ID);
+        assertEquals(DEVICE_ID, prev);
         long start = System.currentTimeMillis();
         iobeam.registerDeviceWithIdAsync(DEVICE_ID);
         long timed = System.currentTimeMillis() - start;
         String now = iobeam.getDeviceId();
         assertNotNull(now);
-        assertEquals(prev, now);
+        assertEquals(DEVICE_ID, now);
         assertTrue(timed < 10);  // Should not hit the network; heuristic.
 
         final long restart = System.currentTimeMillis();
@@ -226,7 +226,7 @@ public class IobeamTest {
             @Override
             public void onSuccess(String deviceId) {
                 long timed = System.currentTimeMillis() - restart;
-                assertEquals(prev, deviceId);
+                assertEquals(DEVICE_ID, deviceId);
                 assertTrue(timed < 10);  // Should not hit the network; heuristic.
             }
 
