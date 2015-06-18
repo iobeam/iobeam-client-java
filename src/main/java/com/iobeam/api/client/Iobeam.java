@@ -14,17 +14,20 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
+import java.util.logging.Logger;
 
 /**
  * The Iobeam client.
  */
 public class Iobeam {
 
+    private static final Logger logger = Logger.getLogger(Iobeam.class.getName());
     public static final String API_URL = "https://api.iobeam.com";
     static final String DEVICE_FILENAME = "iobeam-device-id";
 
@@ -425,6 +428,11 @@ public class Iobeam {
         synchronized (dataStoreLock) {
             data = dataStore;
             dataStore = null;
+        }
+        // No data to send, log a warning and return an empty list.
+        if (data == null) {
+            logger.warning("No data to send.");
+            return new ArrayList<ImportService.Submit>();
         }
         data.setDeviceId(deviceId);
 

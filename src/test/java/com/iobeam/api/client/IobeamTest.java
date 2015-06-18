@@ -1,5 +1,6 @@
 package com.iobeam.api.client;
 
+import com.iobeam.api.auth.AbstractAuthHandler;
 import com.iobeam.api.resource.DataPoint;
 import com.iobeam.api.resource.Import;
 
@@ -12,6 +13,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -32,6 +35,8 @@ public class IobeamTest {
     @BeforeClass
     public static void setUpIobeam() throws Exception {
         iobeam = new Iobeam(null, 0, null);
+        Logger.getLogger(AbstractAuthHandler.class.getName()).setLevel(Level.OFF);
+        Logger.getLogger(RestClient.class.getName()).setLevel(Level.SEVERE);
     }
 
     @AfterClass
@@ -54,6 +59,8 @@ public class IobeamTest {
         assertEquals(PROJECT_ID, iobeam.projectId);
         assertEquals(PROJECT_TOKEN, iobeam.projectToken);
         assertNull(iobeam.deviceId);
+
+        iobeam.reset();
     }
 
     @Test
@@ -109,6 +116,8 @@ public class IobeamTest {
         iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID_NEW);
         assertNotNull(iobeam.deviceId);
         assertEquals(DEVICE_ID_NEW, iobeam.deviceId);
+
+        iobeam2.reset();
     }
 
     @Test
@@ -155,6 +164,8 @@ public class IobeamTest {
         String line = br.readLine();
         br.close();
         assertEquals(DEVICE_ID, line);
+
+        iobeam.reset();
     }
 
     @Test
@@ -195,7 +206,7 @@ public class IobeamTest {
 
     @Test
     public synchronized void testRegisterSameIdSync() throws Exception {
-        Iobeam iobeam = new Iobeam(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);
+        Iobeam iobeam = new Iobeam(null, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);
         String prev = iobeam.getDeviceId();
         assertNotNull(prev);
         assertEquals(prev, DEVICE_ID);
@@ -209,7 +220,7 @@ public class IobeamTest {
 
     @Test
     public synchronized void testRegisterSameIdAsync() throws Exception {
-        Iobeam iobeam = new Iobeam(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);
+        Iobeam iobeam = new Iobeam(null, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);
         String prev = iobeam.getDeviceId();
         assertNotNull(prev);
         assertEquals(DEVICE_ID, prev);
@@ -241,7 +252,7 @@ public class IobeamTest {
 
     @Test
     public synchronized void testRegisterDifferentIdSync() throws Exception {
-        Iobeam iobeam = new Iobeam(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);
+        Iobeam iobeam = new Iobeam(null, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);
         final String prev = iobeam.getDeviceId();
         assertNotNull(prev);
         assertEquals(prev, DEVICE_ID);
@@ -257,7 +268,7 @@ public class IobeamTest {
 
     @Test
     public synchronized void testRegisterDifferentIdAsync() throws Exception {
-        Iobeam iobeam = new Iobeam(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);
+        Iobeam iobeam = new Iobeam(null, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);
         final String prev = iobeam.getDeviceId();
         assertNotNull(prev);
         assertEquals(prev, DEVICE_ID);
@@ -266,5 +277,14 @@ public class IobeamTest {
         iobeam.registerDeviceWithIdAsync("new_device_id");
         // Should be reset before request goes out anyway.
         assertNull(iobeam.getDeviceId());
+    }
+
+    // Added to make sure empty data sets are handled correctly; previously threw a NullPointer
+    @Test
+    public synchronized void testEmptySend() throws Exception {
+        Iobeam iobeam = new Iobeam(null, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);
+        iobeam.send();
+        iobeam.send();
+        assertTrue(true);
     }
 }
