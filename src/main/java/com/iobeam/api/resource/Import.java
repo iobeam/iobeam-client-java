@@ -21,7 +21,21 @@ public class Import implements Serializable {
     private String deviceId;
     private final long projectId;
 
-    private final Map<String, Set<DataPoint>> sources = new HashMap<String, Set<DataPoint>>();
+    /**
+     * DataSet is a convenience name for a `HashSet` containing `DataPoint`s.
+     */
+    public final class DataSet extends HashSet<DataPoint> {
+
+        public DataSet() {
+            super();
+        }
+
+        public DataSet(Set<DataPoint> pts) {
+            super(pts);
+        }
+    }
+
+    private final Map<String, DataSet> sources = new HashMap<String, DataSet>();
 
     /**
      * Creates a new Import object for a particular device and project.
@@ -48,7 +62,7 @@ public class Import implements Serializable {
 
     public long getTotalSize() {
         int total = 0;
-        for (Set<DataPoint> set : sources.values()) {
+        for (DataSet set : sources.values()) {
             total += set.size();
         }
         return total;
@@ -69,7 +83,7 @@ public class Import implements Serializable {
      * @param label The name of the series to get
      * @return Set of unordered data for that series.
      */
-    public Set<DataPoint> getDataSeries(String label) {
+    public DataSet getDataSet(String label) {
         return sources.get(label);
     }
 
@@ -81,9 +95,9 @@ public class Import implements Serializable {
      * @param dataPoint Data to be added.
      */
     public void addDataPoint(String series, DataPoint dataPoint) {
-        Set<DataPoint> set = sources.get(series);
+        DataSet set = sources.get(series);
         if (set == null) {
-            set = new HashSet<DataPoint>();
+            set = new DataSet();
             sources.put(series, set);
         }
         set.add(dataPoint);
@@ -97,14 +111,24 @@ public class Import implements Serializable {
      * @param dataPoints Data to be added.
      */
     public void addDataPointSet(String series, Set<DataPoint> dataPoints) {
-        Set<DataPoint> set = sources.get(series);
+        DataSet set = sources.get(series);
         if (set == null) {
-            set = new HashSet<DataPoint>(dataPoints);
+            set = new DataSet(dataPoints);
             sources.put(series, set);
         } else {
             set.addAll(dataPoints);
         }
+    }
 
+    /**
+     * Adds a set of `DataPoint`s to a series.
+     *
+     * @param series  The series to add the contents of DataSet to. If the series doesn't exist, it
+     *                will be created.
+     * @param dataSet Data to be added.
+     */
+    public void addDataSet(String series, DataSet dataSet) {
+        addDataPointSet(series, dataSet);
     }
 
     /**

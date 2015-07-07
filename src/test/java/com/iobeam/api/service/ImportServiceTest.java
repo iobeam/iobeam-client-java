@@ -83,20 +83,20 @@ public class ImportServiceTest {
         assertEquals(3, reqs.size());
 
         long series1Size = 0;
-        series1Size += getSubmitData(reqs.get(0)).getDataSeries("series1") != null ?
-                       getSubmitData(reqs.get(0)).getDataSeries("series1").size() : 0;
-        series1Size += getSubmitData(reqs.get(1)).getDataSeries("series1") != null ?
-                       getSubmitData(reqs.get(1)).getDataSeries("series1").size() : 0;
-        series1Size += getSubmitData(reqs.get(2)).getDataSeries("series1") != null ?
-                       getSubmitData(reqs.get(2)).getDataSeries("series1").size() : 0;
+        series1Size += getSubmitData(reqs.get(0)).getDataSet("series1") != null ?
+                       getSubmitData(reqs.get(0)).getDataSet("series1").size() : 0;
+        series1Size += getSubmitData(reqs.get(1)).getDataSet("series1") != null ?
+                       getSubmitData(reqs.get(1)).getDataSet("series1").size() : 0;
+        series1Size += getSubmitData(reqs.get(2)).getDataSet("series1") != null ?
+                       getSubmitData(reqs.get(2)).getDataSet("series1").size() : 0;
 
         long series2Size = 0;
-        series2Size += getSubmitData(reqs.get(0)).getDataSeries("series2") != null ?
-                       getSubmitData(reqs.get(0)).getDataSeries("series2").size() : 0;
-        series2Size += getSubmitData(reqs.get(1)).getDataSeries("series2") != null ?
-                       getSubmitData(reqs.get(1)).getDataSeries("series2").size() : 0;
-        series2Size += getSubmitData(reqs.get(2)).getDataSeries("series2") != null ?
-                       getSubmitData(reqs.get(2)).getDataSeries("series2").size() : 0;
+        series2Size += getSubmitData(reqs.get(0)).getDataSet("series2") != null ?
+                       getSubmitData(reqs.get(0)).getDataSet("series2").size() : 0;
+        series2Size += getSubmitData(reqs.get(1)).getDataSet("series2") != null ?
+                       getSubmitData(reqs.get(1)).getDataSet("series2").size() : 0;
+        series2Size += getSubmitData(reqs.get(2)).getDataSet("series2") != null ?
+                       getSubmitData(reqs.get(2)).getDataSet("series2").size() : 0;
 
         assertEquals(midway, series1Size);
         assertEquals(total - midway, series2Size);
