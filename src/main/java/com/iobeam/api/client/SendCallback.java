@@ -10,27 +10,33 @@ import java.util.Set;
 /**
  * Callback for when data sending is called asynchronously.
  */
-public abstract class DataCallback {
+public abstract class SendCallback {
 
     final RestCallback<Void> innerCallback = new RestCallback<Void>() {
+
+        private Map<String, Set<DataPoint>> getDataFromRequest(RestRequest req) {
+            Import imp = (Import) req.getBuilder().getContent();
+            Map<String, Set<DataPoint>> ret = new HashMap<String, Set<DataPoint>>();
+            ret.putAll(imp.getSeries());
+
+            return ret;
+        }
+
         @Override
         public void completed(Void result, RestRequest req) {
-            onSuccess();
+            onSuccess(getDataFromRequest(req));
         }
 
         @Override
         public void failed(Throwable exc, RestRequest req) {
-            Import imp = (Import) req.getBuilder().getContent();
-            Map<String, Set<DataPoint>> ret = new HashMap<String, Set<DataPoint>>();
-            ret.putAll(imp.getSeries());
-            onFailure(exc, ret);
+            onFailure(exc, getDataFromRequest(req));
         }
     };
 
     /**
      * Called when the data send request succeeds.
      */
-    public abstract void onSuccess();
+    public abstract void onSuccess(Map<String, Set<DataPoint>> data);
 
     /**
      * Called when the data send request fails.

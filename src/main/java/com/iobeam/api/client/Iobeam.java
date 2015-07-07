@@ -53,18 +53,18 @@ public class Iobeam {
     }
 
     /**
-     * DataCallback used when autoRetry is set.
+     * SendCallback used when autoRetry is set.
      */
-    private static final class ReinsertDataCallback extends DataCallback {
+    private static final class ReinsertSendCallback extends SendCallback {
 
         private final Iobeam client;
 
-        public ReinsertDataCallback(Iobeam iobeam) {
+        public ReinsertSendCallback(Iobeam iobeam) {
             this.client = iobeam;
         }
 
         @Override
-        public void onSuccess() {
+        public void onSuccess(Map<String, Set<DataPoint>> data) {
         }
 
         @Override
@@ -568,13 +568,13 @@ public class Iobeam {
      * @throws ApiException Thrown is the client is not initialized or if the device id has not been
      *                      set.
      */
-    public void sendAsync(DataCallback callback) throws ApiException {
+    public void sendAsync(SendCallback callback) throws ApiException {
         List<ImportService.Submit> reqs = prepareDataRequests();
         for (ImportService.Submit req : reqs) {
             if (callback == null && !autoRetry) {
                 req.executeAsync();
             } else if (callback == null) {
-                req.executeAsync(new ReinsertDataCallback(this).innerCallback);
+                req.executeAsync(new ReinsertSendCallback(this).innerCallback);
             } else {
                 req.executeAsync(callback.innerCallback);
             }
