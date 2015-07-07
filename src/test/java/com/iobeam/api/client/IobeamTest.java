@@ -181,15 +181,33 @@ public class IobeamTest {
     }
 
     @Test
+    public void testGetTotalSize() throws Exception {
+        final String SERIES = "series1";
+        final String SERIES2 = "series2";
+        iobeam.addData(SERIES, new DataPoint(0));
+        iobeam.addData(SERIES, new DataPoint(1000));
+        assertEquals(2, iobeam.getDataSize(SERIES));
+        iobeam.addData(SERIES2, new DataPoint(2000));
+        assertEquals(1, iobeam.getDataSize(SERIES2));
+        assertEquals(3, iobeam.getTotalDataSize());
+    }
+
+    @Test
     public void testGetDataSize() throws Exception {
         final String SERIES = "series1";
+        // first point
         DataPoint d1 = new DataPoint(1000, 2000);
         iobeam.addData(SERIES, d1);
         assertEquals(1, iobeam.getDataSize(SERIES));
+        // same point, no change
+        iobeam.addData(SERIES, d1);
+        assertEquals(1, iobeam.getDataSize(SERIES));
+        // new point, +1
         DataPoint d2 = new DataPoint(2000, 4000);
         iobeam.addData(SERIES, d2);
         assertEquals(2, iobeam.getDataSize(SERIES));
 
+        // series doesn't exist
         assertEquals(0, iobeam.getDataSize("something_else"));
     }
 

@@ -455,6 +455,20 @@ public class Iobeam {
     }
 
     /**
+     * Returns the size of all of the data in all the series.
+     *
+     * @return Size of the data store, or 0 if it has not been made yet.
+     */
+    public long getTotalDataSize() {
+        synchronized (dataStoreLock) {
+            if (dataStore == null)
+                return 0;
+
+            return dataStore.getTotalSize();
+        }
+    }
+
+    /**
      * Returns the size of the data set in a particular series.
      *
      * @param series The series to query
