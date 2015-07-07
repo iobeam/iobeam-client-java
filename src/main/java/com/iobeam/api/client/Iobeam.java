@@ -459,7 +459,7 @@ public class Iobeam {
      *
      * @return Size of the data store, or 0 if it has not been made yet.
      */
-    public long getTotalDataSize() {
+    public long getDataSize() {
         synchronized (dataStoreLock) {
             if (dataStore == null) {
                 return 0;
@@ -475,7 +475,7 @@ public class Iobeam {
      * @param series The series to query
      * @return Size of the data set, or 0 if series does not exist.
      */
-    public int getDataSize(String series) {
+    public int getSeriesSize(String series) {
         synchronized (dataStoreLock) {
             if (dataStore == null) {
                 return 0;
