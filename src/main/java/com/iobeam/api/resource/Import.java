@@ -24,7 +24,7 @@ public class Import implements Serializable {
     /**
      * DataSet is a convenience name for a `HashSet` containing `DataPoint`s.
      */
-    public final class DataSet extends HashSet<DataPoint> {
+    public static final class DataSet extends HashSet<DataPoint> {
 
         public DataSet() {
             super();
@@ -35,7 +35,26 @@ public class Import implements Serializable {
         }
     }
 
-    private final Map<String, DataSet> sources = new HashMap<String, DataSet>();
+    public static final class DataStore extends HashMap<String, DataSet> {
+
+        public DataStore() {
+            super();
+        }
+
+        public DataStore(Map<String, Set<DataPoint>> store) {
+            super(convert(store));
+        }
+
+        private static Map<String, DataSet> convert(Map<String, Set<DataPoint>> store) {
+            Map<String, DataSet> ret = new HashMap<String, DataSet>();
+            for (String k : store.keySet()) {
+                ret.put(k, new DataSet(store.get(k)));
+            }
+            return ret;
+        }
+    }
+
+    private final DataStore store = new DataStore();
 
     /**
      * Creates a new Import object for a particular device and project.
@@ -62,7 +81,7 @@ public class Import implements Serializable {
 
     public long getTotalSize() {
         int total = 0;
-        for (DataSet set : sources.values()) {
+        for (DataSet set : store.values()) {
             total += set.size();
         }
         return total;
@@ -74,7 +93,7 @@ public class Import implements Serializable {
      * @return Mapping from a series name to unordered set of data.
      */
     public Map<String, Set<DataPoint>> getSeries() {
-        return new HashMap<String, Set<DataPoint>>(sources);
+        return new HashMap<String, Set<DataPoint>>(store);
     }
 
     /**
@@ -84,7 +103,7 @@ public class Import implements Serializable {
      * @return Set of unordered data for that series.
      */
     public DataSet getDataSet(String label) {
-        return sources.get(label);
+        return store.get(label);
     }
 
     /**
@@ -95,10 +114,10 @@ public class Import implements Serializable {
      * @param dataPoint Data to be added.
      */
     public void addDataPoint(String series, DataPoint dataPoint) {
-        DataSet set = sources.get(series);
+        DataSet set = store.get(series);
         if (set == null) {
             set = new DataSet();
-            sources.put(series, set);
+            store.put(series, set);
         }
         set.add(dataPoint);
     }
@@ -111,10 +130,10 @@ public class Import implements Serializable {
      * @param dataPoints Data to be added.
      */
     public void addDataPointSet(String series, Set<DataPoint> dataPoints) {
-        DataSet set = sources.get(series);
+        DataSet set = store.get(series);
         if (set == null) {
             set = new DataSet(dataPoints);
-            sources.put(series, set);
+            store.put(series, set);
         } else {
             set.addAll(dataPoints);
         }
@@ -144,13 +163,13 @@ public class Import implements Serializable {
         out.put("device_id", deviceId);
         out.put("project_id", projectId);
         JSONArray sourcesArr = new JSONArray();
-        List<String> sourceNames = new ArrayList<String>(sources.keySet());
+        List<String> sourceNames = new ArrayList<String>(store.keySet());
         Collections.sort(sourceNames);
         for (String k : sourceNames) {
             JSONObject temp = new JSONObject();
             temp.put("name", k);
             JSONArray dataArr = new JSONArray();
-            for (DataPoint d : sources.get(k)) {
+            for (DataPoint d : store.get(k)) {
                 dataArr.put(d.toJson());
             }
             temp.put("data", dataArr);
