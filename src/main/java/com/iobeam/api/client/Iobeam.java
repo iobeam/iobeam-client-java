@@ -461,8 +461,9 @@ public class Iobeam {
      */
     public long getTotalDataSize() {
         synchronized (dataStoreLock) {
-            if (dataStore == null)
+            if (dataStore == null) {
                 return 0;
+            }
 
             return dataStore.getTotalSize();
         }

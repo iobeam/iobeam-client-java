@@ -10,7 +10,7 @@ import java.util.List;
 
 import static junit.framework.TestCase.assertEquals;
 
-public class ImportsTest {
+public class ImportServiceTest {
 
     private static final String TEST_DEVICE_ID = "test1234only5678";
 
@@ -48,14 +48,15 @@ public class ImportsTest {
     @Test
     public void testSmallEnoughSeries() throws Exception {
         Import imp = new Import(TEST_DEVICE_ID, 1000);
-        long total = (long)(ImportService.REQ_MAX_POINTS * 1.5);
+        long total = (long) (ImportService.REQ_MAX_POINTS * 1.5);
         long midway = total / 2;
 
         for (int i = 0; i < total; i++) {
-            if (i < midway)
+            if (i < midway) {
                 imp.addDataPoint("series1", new DataPoint(i));
-            else
+            } else {
                 imp.addDataPoint("series2", new DataPoint(i));
+            }
         }
 
         List<ImportService.Submit> reqs = service.submit(imp);
@@ -67,14 +68,15 @@ public class ImportsTest {
     @Test
     public void testOneSmallOneBigSeries() throws Exception {
         Import imp = new Import(TEST_DEVICE_ID, 1000);
-        long total = (long)(ImportService.REQ_MAX_POINTS * 2);
+        long total = (long) (ImportService.REQ_MAX_POINTS * 2);
         long midway = ImportService.REQ_MAX_POINTS / 2;
 
         for (int i = 0; i < total; i++) {
-            if (i < midway)
+            if (i < midway) {
                 imp.addDataPoint("series1", new DataPoint(i));
-            else
+            } else {
                 imp.addDataPoint("series2", new DataPoint(i));
+            }
         }
 
         List<ImportService.Submit> reqs = service.submit(imp);

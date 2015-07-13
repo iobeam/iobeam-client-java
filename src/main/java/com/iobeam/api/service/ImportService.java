@@ -49,9 +49,9 @@ public class ImportService {
         // Here we decide whether this request needs to be split up.
         long totalSize = request.getTotalSize();
         // Request is sufficiently small, send all at once.
-        if (totalSize <= REQ_MAX_POINTS)
+        if (totalSize <= REQ_MAX_POINTS) {
             ret.add(new Submit(request));
-        else {  // Request is too big.
+        } else {  // Request is too big.
             Map<String, Set<DataPoint>> data = request.getSeries();
 
             // For each series, we see if that series worth of points is small enough to send as
@@ -74,8 +74,9 @@ public class ImportService {
                         }
                     }
                     // Add to list if any points were added to last one.
-                    if (i > 0)
+                    if (i > 0) {
                         ret.add(new Submit(temp));
+                    }
                 } else {  // Series fits in one request.
                     Import temp = cloneImportMetadata(request);
                     temp.addDataPointSet(k, pts);

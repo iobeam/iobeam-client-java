@@ -35,9 +35,9 @@ public abstract class DataCallback {
     /**
      * Called when the data send request fails.
      *
-     * @param exc The error that caused the request to fail.
-     * @param data The data that failed to be imported, as a map from series name to a set
-     *             of DataPoints.
+     * @param exc  The error that caused the request to fail.
+     * @param data The data that failed to be imported, as a map from series name to a set of
+     *             DataPoints.
      */
     public abstract void onFailure(Throwable exc, Map<String, Set<DataPoint>> data);
 }

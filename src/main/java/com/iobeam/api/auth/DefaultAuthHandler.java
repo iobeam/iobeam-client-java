@@ -21,12 +21,14 @@ public class DefaultAuthHandler extends AbstractAuthHandler {
     private static final String FMT_DEFAULT_PATH = "project_%d.authtoken";
 
     public static ProjectBearerAuthToken parseStringToProjectToken(String t) {
-        if (t == null)
+        if (t == null) {
             return null;
+        }
 
         int firstDot = t.indexOf('.');
-        if (firstDot < 0)
+        if (firstDot < 0) {
             return null;
+        }
 
         int secondDot = t.indexOf('.', firstDot + 1);
         String substr = t.substring(firstDot + 1, secondDot);

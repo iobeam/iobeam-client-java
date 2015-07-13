@@ -291,7 +291,6 @@ public class IobeamTest {
         assertNotNull(prev);
         assertEquals(prev, DEVICE_ID);
 
-
         iobeam.registerDeviceWithIdAsync("new_device_id");
         // Should be reset before request goes out anyway.
         assertNull(iobeam.getDeviceId());
