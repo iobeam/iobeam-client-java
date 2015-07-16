@@ -480,7 +480,7 @@ public class Iobeam {
             if (dataStore == null) {
                 return 0;
             }
-            Set<DataPoint> set = dataStore.getDataSeries(series);
+            Import.DataSet set = dataStore.getDataSet(series);
             return set == null ? 0 : set.size();
         }
     }

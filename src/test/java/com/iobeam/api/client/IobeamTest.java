@@ -174,7 +174,7 @@ public class IobeamTest {
         DataPoint d1 = new DataPoint(1000, 2000);
         iobeam.addData(SERIES, d1);
         Import ds = iobeam.getDataStore();
-        Set<DataPoint> data = ds.getDataSeries(SERIES);
+        Set<DataPoint> data = ds.getDataSet(SERIES);
         assertEquals(1, data.size());
         assertEquals(data.size(), iobeam.getDataSize(SERIES));
         assertTrue(data.contains(d1));

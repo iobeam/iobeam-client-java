@@ -21,7 +21,40 @@ public class Import implements Serializable {
     private String deviceId;
     private final long projectId;
 
-    private final Map<String, Set<DataPoint>> sources = new HashMap<String, Set<DataPoint>>();
+    /**
+     * DataSet is a convenience name for a `HashSet` containing `DataPoint`s.
+     */
+    public static final class DataSet extends HashSet<DataPoint> {
+
+        public DataSet() {
+            super();
+        }
+
+        public DataSet(Set<DataPoint> pts) {
+            super(pts);
+        }
+    }
+
+    public static final class DataStore extends HashMap<String, DataSet> {
+
+        public DataStore() {
+            super();
+        }
+
+        public DataStore(Map<String, Set<DataPoint>> store) {
+            super(convert(store));
+        }
+
+        private static Map<String, DataSet> convert(Map<String, Set<DataPoint>> store) {
+            Map<String, DataSet> ret = new HashMap<String, DataSet>();
+            for (String k : store.keySet()) {
+                ret.put(k, new DataSet(store.get(k)));
+            }
+            return ret;
+        }
+    }
+
+    private final DataStore store = new DataStore();
 
     /**
      * Creates a new Import object for a particular device and project.
@@ -48,7 +81,7 @@ public class Import implements Serializable {
 
     public long getTotalSize() {
         int total = 0;
-        for (Set<DataPoint> set : sources.values()) {
+        for (DataSet set : store.values()) {
             total += set.size();
         }
         return total;
@@ -60,7 +93,7 @@ public class Import implements Serializable {
      * @return Mapping from a series name to unordered set of data.
      */
     public Map<String, Set<DataPoint>> getSeries() {
-        return new HashMap<String, Set<DataPoint>>(sources);
+        return new HashMap<String, Set<DataPoint>>(store);
     }
 
     /**
@@ -69,8 +102,8 @@ public class Import implements Serializable {
      * @param label The name of the series to get
      * @return Set of unordered data for that series.
      */
-    public Set<DataPoint> getDataSeries(String label) {
-        return sources.get(label);
+    public DataSet getDataSet(String label) {
+        return store.get(label);
     }
 
     /**
@@ -81,10 +114,10 @@ public class Import implements Serializable {
      * @param dataPoint Data to be added.
      */
     public void addDataPoint(String series, DataPoint dataPoint) {
-        Set<DataPoint> set = sources.get(series);
+        DataSet set = store.get(series);
         if (set == null) {
-            set = new HashSet<DataPoint>();
-            sources.put(series, set);
+            set = new DataSet();
+            store.put(series, set);
         }
         set.add(dataPoint);
     }
@@ -97,14 +130,24 @@ public class Import implements Serializable {
      * @param dataPoints Data to be added.
      */
     public void addDataPointSet(String series, Set<DataPoint> dataPoints) {
-        Set<DataPoint> set = sources.get(series);
+        DataSet set = store.get(series);
         if (set == null) {
-            set = new HashSet<DataPoint>(dataPoints);
-            sources.put(series, set);
+            set = new DataSet(dataPoints);
+            store.put(series, set);
         } else {
             set.addAll(dataPoints);
         }
+    }
 
+    /**
+     * Adds a set of `DataPoint`s to a series.
+     *
+     * @param series  The series to add the contents of DataSet to. If the series doesn't exist, it
+     *                will be created.
+     * @param dataSet Data to be added.
+     */
+    public void addDataSet(String series, DataSet dataSet) {
+        addDataPointSet(series, dataSet);
     }
 
     /**
@@ -120,13 +163,13 @@ public class Import implements Serializable {
         out.put("device_id", deviceId);
         out.put("project_id", projectId);
         JSONArray sourcesArr = new JSONArray();
-        List<String> sourceNames = new ArrayList<String>(sources.keySet());
+        List<String> sourceNames = new ArrayList<String>(store.keySet());
         Collections.sort(sourceNames);
         for (String k : sourceNames) {
             JSONObject temp = new JSONObject();
             temp.put("name", k);
             JSONArray dataArr = new JSONArray();
-            for (DataPoint d : sources.get(k)) {
+            for (DataPoint d : store.get(k)) {
                 dataArr.put(d.toJson());
             }
             temp.put("data", dataArr);
