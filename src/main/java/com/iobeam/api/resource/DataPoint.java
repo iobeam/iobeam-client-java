@@ -19,8 +19,6 @@ public class DataPoint implements Serializable {
     private final long time;
     private final Object data;
 
-    // TODO: There should probably be some error conditions that throw exceptions or fail nicely.
-
     /**
      * Takes a string that is a delimited list of values all of a particular type (integer, long,
      * float, double, or string) and parses them into a List of DataPoints all with the same
@@ -30,7 +28,10 @@ public class DataPoint implements Serializable {
      * @param splitRegex Delimiter to split the string on (e.g., a comma (,) for csv).
      * @param type       Data type of the points, either Integer/Long, Float/Double, or String.
      * @return A DataPoint List of all parseable points.
+     * @deprecated com.iobeam.api.resource.util.DataPointParser.parse() should be used instead. Will
+     * be removed in the next release.
      */
+    @Deprecated
     public static List<DataPoint> parseDataPoints(String points,
                                                   String splitRegex,
                                                   Class<?> type) {
@@ -47,7 +48,10 @@ public class DataPoint implements Serializable {
      * @param type       Data type of the points, either Integer/Long, Float/Double, or String.
      * @param ts         The timestamp to apply to all the points.
      * @return A DataPoint List of all parseable points.
+     * @deprecated com.iobeam.api.resource.util.DataPointParser.parse() should be used instead. Will
+     * be removed in the next release.
      */
+    @Deprecated
     public static List<DataPoint> parseDataPoints(String points,
                                                   String splitRegex,
                                                   Class<?> type,
