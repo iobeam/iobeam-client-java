@@ -72,6 +72,8 @@ public class DataPointTest {
         assertEquals("11.2", json.getString("value"));
     }
 
+    // REMOVE IN NEXT RELEASE
+
     @Test
     public void testCsvIntParse() throws Exception {
         long ts = 1001;
