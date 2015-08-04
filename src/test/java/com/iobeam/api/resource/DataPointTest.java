@@ -74,6 +74,27 @@ public class DataPointTest {
     }
 
     @Test
+    public void testFromByteArray() throws Exception {
+        long now = System.currentTimeMillis();
+
+        DataPoint dataPointInt = new DataPoint(now, 10);
+        ByteBuffer buf = ByteBuffer.wrap(dataPointInt.toByteArray());
+
+        DataPoint reverse = DataPoint.fromByteArray(buf.array());
+        assertEquals(dataPointInt, reverse);
+
+        DataPoint dataPointDouble = new DataPoint(now, 10.5);
+        buf = ByteBuffer.wrap(dataPointDouble.toByteArray());
+        reverse = DataPoint.fromByteArray(buf.array());
+        assertEquals(dataPointDouble, reverse);
+
+        DataPoint dataPointString = new DataPoint(now, "11.2");
+        buf = ByteBuffer.wrap(dataPointString.toByteArray());
+        reverse = DataPoint.fromByteArray(buf.array());
+        assertEquals(dataPointString, reverse);
+    }
+
+    @Test
     public void testToByteArray() throws Exception {
         long now = System.currentTimeMillis();
 

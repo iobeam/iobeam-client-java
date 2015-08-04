@@ -179,11 +179,14 @@ public class DataPoint implements Serializable {
             return new DataPoint(timestamp, buf.getLong());
         } else if (type == TYPE_DOUBLE) {
             return new DataPoint(timestamp, buf.getDouble());
-        } else {
+        } else if (type == TYPE_STRING) {
             int len = buf.getInt();
             byte[] bytes = new byte[len];
             buf.get(bytes, 0, len);
             return new DataPoint(timestamp, new String(bytes));
+        } else {
+            // TODO - Throw exception if invalid format.
+            return null;
         }
     }
 
