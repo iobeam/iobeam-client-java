@@ -195,8 +195,10 @@ public class DataPoint implements Serializable {
      *
      * Starts with 8 bytes for time and 1 byte for type for a total of 9 bytes. Then, based on value
      * type, it does the following:
-     * - int/long/float/double: 8 bytes for the value, for 17 total bytes.
-     * - strings: 4 bytes for string length, then X bytes for string for a total of 13 + X bytes.
+     *
+     * (1) int/long/float/double: 8 bytes for the value, for 17 total bytes.
+     *
+     * (2) strings: 4 bytes for string length, then X bytes for string for a total of 13 + X bytes.
      *
      * @return Byte array representation
      */
