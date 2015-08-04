@@ -49,7 +49,7 @@ If you are building an Android app, add the following lines to your `app/build.g
 
     dependencies {
         ...
-        compile 'com.iobeam:iobeam-client-java:0.4.0'
+        compile 'com.iobeam:iobeam-client-java:0.4.2'
     }
 
 It is also available on Maven Central.
