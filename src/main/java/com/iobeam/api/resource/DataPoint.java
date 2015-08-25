@@ -40,6 +40,7 @@ public class DataPoint implements Serializable {
      * @deprecated com.iobeam.api.resource.util.DataPointParser.parse() should be used instead. Will
      * be removed in the next release.
      */
+    // TODO(robatticus) Remove in 0.6.0
     @Deprecated
     public static List<DataPoint> parseDataPoints(String points,
                                                   String splitRegex,
@@ -60,6 +61,7 @@ public class DataPoint implements Serializable {
      * @deprecated com.iobeam.api.resource.util.DataPointParser.parse() should be used instead. Will
      * be removed in the next release.
      */
+    // TODO(robatticus) Remove in 0.6.0
     @Deprecated
     public static List<DataPoint> parseDataPoints(String points,
                                                   String splitRegex,
