@@ -227,7 +227,7 @@ public class Iobeam {
             throw new NotInitializedException();
         }
         DeviceService service = new DeviceService(client);
-        return service.add(projectId, deviceId, deviceName, null, null);
+        return service.add(projectId, new Device.Spec(deviceId, deviceName, null), null);
     }
 
     /**
