@@ -73,6 +73,58 @@ public class Iobeam {
         }
     }
 
+    public static class Builder {
+
+        private final long projectId;
+        private final String token;
+        private String savePath;
+        private String deviceId;
+        private boolean autoRetry;
+
+        public Builder(long projectId, String projectToken) {
+            this.projectId = projectId;
+            this.token = projectToken;
+            this.savePath = null;
+            this.deviceId = null;
+            this.autoRetry = false;
+        }
+
+        public Builder saveIdToPath(String path) {
+            this.savePath = path;
+
+            return this;
+        }
+
+        public Builder setDeviceId(String id) {
+            this.deviceId = id;
+
+            return this;
+        }
+
+        public Builder autoRetry() {
+            return this.autoRetry(true);
+        }
+
+        public Builder autoRetry(boolean retry) {
+            this.autoRetry = retry;
+
+            return this;
+        }
+
+        public Iobeam build() {
+            try {
+                Iobeam  client = new Iobeam(this.projectId, this.token, this.savePath,
+                                            this.deviceId);
+                client.setAutoRetry(this.autoRetry);
+
+                return client;
+            } catch (ApiException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+    }
+
     String path = null;
     long projectId = -1;
     String projectToken = null;
@@ -83,6 +135,10 @@ public class Iobeam {
     private Import dataStore;
     private boolean autoRetry = false;
 
+    private Iobeam(long projectId, String projectToken, String path, String deviceId)
+        throws ApiException {
+        init(path, projectId, projectToken, deviceId);
+    }
 
     /**
      * Constructs an Iobeam object without a device ID.
@@ -93,6 +149,7 @@ public class Iobeam {
      * @param projectToken The token to use when communicating with iobeam cloud.
      * @throws ApiException Thrown if something goes wrong with initializing the device ID.
      */
+    @Deprecated
     public Iobeam(String path, long projectId, String projectToken)
         throws ApiException {
         this(path, projectId, projectToken, null);
@@ -108,6 +165,7 @@ public class Iobeam {
      * @param deviceId     Pre-registered device id to be used.
      * @throws ApiException Thrown if something goes wrong with initializing the device ID.
      */
+    @Deprecated
     public Iobeam(String path, long projectId, String projectToken, String deviceId)
         throws ApiException {
         init(path, projectId, projectToken, deviceId);
