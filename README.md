@@ -93,12 +93,12 @@ you will need to register one in code. There are two ways to register a `device_
 
 (1) Let iobeam generate one for you:
 
-    Iobeam iobeam = new Iobeam(PATH, PROJECT_ID, PROJECT_TOKEN);
+    Iobeam iobeam = new Iobeam.Builder(PROJECT_ID, PROJECT_TOKEN).saveIdToPath(PATH).build();
     iobeam.registerDeviceAsync();
 
 (2) Provide your own (must be unique to your project):
 
-    Iobeam iobeam = new Iobeam(PATH, PROJECT_ID, PROJECT_TOKEN);
+    Iobeam iobeam = new Iobeam.Builder(PROJECT_ID, PROJECT_TOKEN).saveIdToPath(PATH).build();
     iobeam.registerDeviceWithIdAsync("my_desired_device_id");
 
 The `device_id` will be saved to disk at the path `PATH`. On Android, this would be set to something
@@ -112,7 +112,8 @@ provide a _different_ `device_id` to `registerDeviceWithIdAsync()`, the old one 
 If you have registered a `device_id` (e.g. using our [CLI](https://github.com/iobeam/iobeam)),
 you can pass this in the constructor and skip the registration step.
 
-    Iobeam iobeam = new Iobeam(PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);
+    Iobeam iobeam = new Iobeam.Builder(PROJECT_ID, PROJECT_TOKEN).saveIdToPath(PATH)
+        .setDeviceId(DEVICE_ID).build();
     
 You *must* have registered some other way (CLI, website, previous installation, etc) for this to
 work.
@@ -122,8 +123,12 @@ work.
 If you don't want the `device_id` to be automatically stored for you, set the `path` parameter in
 either constructor to be `null`:
 
-    Iobeam iobeam = new Iobeam(null, PROJECT_ID, PROJECT_TOKEN);  // without registered id
-    Iobeam iobeam = new Iobeam(null, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);  // with registered id
+    // Without registered id:
+    Iobeam iobeam = new Iobeam.Builder(PROJECT_ID, PROJECT_TOKEN).build();
+    
+    // With registered id:
+    Iobeam iobeam = new Iobeam.Builder(PROJECT_ID, PROJECT_TOKEN)
+        .setDeviceId(DEVICE_ID).build();
 
 This is useful for cases where you want to persist the ID yourself (e.g. in a settings file), or if
 you are making `Iobeam` objects that are temporary. For example, if the device you are using acts
@@ -196,7 +201,7 @@ Here's the full source code for our example:
 
     // Initialization
     try {
-        Iobeam iobeam = new Iobeam(PATH, PROJECT_ID, PROJECT_TOKEN);
+        Iobeam iobeam = new Iobeam.Builder(PROJECT_ID, PROJECT_TOKEN).saveIdToPath(PATH).build();
         if (iobeam.getDeviceId() == null)
             iobeam.registerDeviceAsync(null); // Registers using auto-generated device_id
     } catch (ApiException e) {
