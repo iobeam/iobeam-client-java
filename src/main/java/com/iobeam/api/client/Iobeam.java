@@ -113,8 +113,8 @@ public class Iobeam {
 
         public Iobeam build() {
             try {
-                Iobeam  client = new Iobeam(this.projectId, this.token, this.savePath,
-                                            this.deviceId);
+                Iobeam client = new Iobeam(this.projectId, this.token, this.savePath,
+                                           this.deviceId);
                 client.setAutoRetry(this.autoRetry);
 
                 return client;
@@ -482,6 +482,14 @@ public class Iobeam {
         return dataStore;
     }
 
+    /* A lock should always be acquired before calling this method! */
+    private void _addDataWithoutLock(String seriesName, DataPoint dataPoint) {
+        if (dataStore == null) {
+            dataStore = new Import(deviceId, projectId);
+        }
+        dataStore.addDataPoint(seriesName, dataPoint);
+    }
+
     /**
      * Adds a data value to a particular series in the data store.
      *
@@ -490,11 +498,31 @@ public class Iobeam {
      */
     public void addData(String seriesName, DataPoint dataPoint) {
         synchronized (dataStoreLock) {
-            if (dataStore == null) {
-                dataStore = new Import(deviceId, projectId);
-            }
-            dataStore.addDataPoint(seriesName, dataPoint);
+            _addDataWithoutLock(seriesName, dataPoint);
         }
+    }
+
+    /**
+     * Adds a list of data points to a list of series in the data store. This is essentially a 'zip'
+     * operation on the points and series names, where the first point is put in the first series,
+     * the second point in the second series, etc. Both lists MUST be the same size.
+     *
+     * @param points      List of DataPoints to be added
+     * @param seriesNames List of corresponding series for the datapoints.
+     * @return True if the points are added; false if the lists are not the same size, or adding
+     * fails.
+     */
+    public boolean addDataMapToSeries(String[] seriesNames, DataPoint[] points) {
+        if (seriesNames == null || points == null || points.length != seriesNames.length) {
+            return false;
+        }
+
+        synchronized (dataStoreLock) {
+            for (int i = 0; i < seriesNames.length; i++) {
+                _addDataWithoutLock(seriesNames[i], points[i]);
+            }
+        }
+        return true;
     }
 
     void addBulkData(Map<String, Set<DataPoint>> data) {
