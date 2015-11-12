@@ -114,7 +114,7 @@ public class IobeamTest {
         iobeam.reset(false);  // simulates app being closed, 'false' keeps ID on disk
 
         // Test that the persisted device ID is used.
-        iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, null);
+        iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, null, Iobeam.DEFAULT_API_URL);
         assertEquals(FILE_PATH, iobeam.path);
         assertEquals(PROJECT_ID, iobeam.projectId);
         assertEquals(PROJECT_TOKEN, iobeam.projectToken);
@@ -131,7 +131,7 @@ public class IobeamTest {
         iobeam.reset();
         final String DEVICE_ID_NEW = "thisisadifferentid";
         assertNotEquals(DEVICE_ID, DEVICE_ID_NEW);
-        iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID_NEW);
+        iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID_NEW, Iobeam.DEFAULT_API_URL);
         assertNotNull(iobeam.deviceId);
         assertEquals(DEVICE_ID_NEW, iobeam.deviceId);
 
@@ -149,7 +149,7 @@ public class IobeamTest {
         iobeam.reset(false);  // simulates app being closed, 'false' keeps ID on disk
 
         // Test that the persisted device ID is used.
-        iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, null);
+        iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, null, Iobeam.DEFAULT_API_URL);
         assertEquals(FILE_PATH, iobeam.path);
         assertEquals(PROJECT_ID, iobeam.projectId);
         assertEquals(PROJECT_TOKEN, iobeam.projectToken);
@@ -166,7 +166,7 @@ public class IobeamTest {
         iobeam.reset();
         final String DEVICE_ID_NEW = "thisisadifferentid";
         assertNotEquals(DEVICE_ID, DEVICE_ID_NEW);
-        iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID_NEW);
+        iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID_NEW, Iobeam.DEFAULT_API_URL);
         assertNotNull(iobeam.deviceId);
         assertEquals(DEVICE_ID_NEW, iobeam.deviceId);
 

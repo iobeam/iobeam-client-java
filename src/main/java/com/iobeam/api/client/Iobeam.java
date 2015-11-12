@@ -28,7 +28,9 @@ import java.util.logging.Logger;
 public class Iobeam {
 
     private static final Logger logger = Logger.getLogger(Iobeam.class.getName());
-    public static final String API_URL = "https://api.iobeam.com";
+    public static final String DEFAULT_API_URL = "https://api.iobeam.com";
+    @Deprecated
+    public static final String API_URL = DEFAULT_API_URL;
     static final String DEVICE_FILENAME = "iobeam-device-id";
 
     /**
@@ -78,6 +80,7 @@ public class Iobeam {
         private final long projectId;
         private final String token;
         private String savePath;
+        private String backendUrl;
         private String deviceId;
         private boolean autoRetry;
 
@@ -85,6 +88,7 @@ public class Iobeam {
             this.projectId = projectId;
             this.token = projectToken;
             this.savePath = null;
+            this.backendUrl = DEFAULT_API_URL;
             this.deviceId = null;
             this.autoRetry = false;
         }
@@ -101,6 +105,11 @@ public class Iobeam {
             return this;
         }
 
+        public Builder setBackend(String url) {
+            this.backendUrl = url;
+            return this;
+        }
+
         public Builder autoRetry() {
             return this.autoRetry(true);
         }
@@ -114,7 +123,7 @@ public class Iobeam {
         public Iobeam build() {
             try {
                 Iobeam client = new Iobeam(this.projectId, this.token, this.savePath,
-                                           this.deviceId);
+                                           this.deviceId, this.backendUrl);
                 client.setAutoRetry(this.autoRetry);
 
                 return client;
@@ -135,9 +144,9 @@ public class Iobeam {
     private Import dataStore;
     private boolean autoRetry = false;
 
-    private Iobeam(long projectId, String projectToken, String path, String deviceId)
+    private Iobeam(long projectId, String projectToken, String path, String deviceId, String url)
         throws ApiException {
-        init(path, projectId, projectToken, deviceId);
+        init(path, projectId, projectToken, deviceId, url);
     }
 
     /**
@@ -168,7 +177,7 @@ public class Iobeam {
     @Deprecated
     public Iobeam(String path, long projectId, String projectToken, String deviceId)
         throws ApiException {
-        init(path, projectId, projectToken, deviceId);
+        init(path, projectId, projectToken, deviceId, DEFAULT_API_URL);
     }
 
     /**
@@ -179,9 +188,10 @@ public class Iobeam {
      * @param projectId    The numeric project ID to associate with.
      * @param projectToken The token to use when communicating with iobeam cloud.
      * @param deviceId     The device ID that should be used by the iobeam client.
+     * @param backendUrl   The base URL of API services to talk to
      * @throws ApiException Thrown if something goes wrong with initializing the device ID.
      */
-    void init(String path, long projectId, String projectToken, String deviceId)
+    void init(String path, long projectId, String projectToken, String deviceId, String backendUrl)
         throws ApiException {
         this.path = path;
         this.projectId = projectId;
@@ -191,7 +201,7 @@ public class Iobeam {
         }
         setDeviceId(deviceId);
 
-        client = new RestClient(API_URL, Executors.newSingleThreadExecutor());
+        client = new RestClient(backendUrl, Executors.newSingleThreadExecutor());
         File dir = path != null ? new File(path) : null;
         AuthHandler handler = new DefaultAuthHandler(client, projectId, projectToken, dir);
         client.setAuthenticationHandler(handler);
