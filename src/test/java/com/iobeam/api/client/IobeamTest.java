@@ -1,20 +1,14 @@
 package com.iobeam.api.client;
 
-import com.iobeam.api.auth.AbstractAuthHandler;
 import com.iobeam.api.resource.DataPoint;
 import com.iobeam.api.resource.Import;
 
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -29,27 +23,6 @@ public class IobeamTest {
     private static final String PROJECT_TOKEN = "fake_token";
     private static final String DEVICE_ID = "fake_device_identifier";
     private static final String FILE_PATH = new File(".").getAbsolutePath();
-
-    private static Iobeam iobeam;
-
-    @BeforeClass
-    public static void setUpIobeam() throws Exception {
-        iobeam = new Iobeam.Builder(0, null).build();
-        Logger.getLogger(AbstractAuthHandler.class.getName()).setLevel(Level.OFF);
-        Logger.getLogger(RestClient.class.getName()).setLevel(Level.SEVERE);
-    }
-
-    @AfterClass
-    public static void tearDown() throws Exception {
-        iobeam.reset();
-        iobeam = null;
-    }
-
-    @Before
-    public void setUp() throws Exception {
-        iobeam.reset();
-        assertFalse(iobeam.isInitialized());
-    }
 
     private static Iobeam.Builder getBuilder() {
         return new Iobeam.Builder(PROJECT_ID, PROJECT_TOKEN);
@@ -141,7 +114,7 @@ public class IobeamTest {
         iobeam.reset(false);  // simulates app being closed, 'false' keeps ID on disk
 
         // Test that the persisted device ID is used.
-        iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, null);
+        iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, null, Iobeam.DEFAULT_API_URL);
         assertEquals(FILE_PATH, iobeam.path);
         assertEquals(PROJECT_ID, iobeam.projectId);
         assertEquals(PROJECT_TOKEN, iobeam.projectToken);
@@ -158,7 +131,7 @@ public class IobeamTest {
         iobeam.reset();
         final String DEVICE_ID_NEW = "thisisadifferentid";
         assertNotEquals(DEVICE_ID, DEVICE_ID_NEW);
-        iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID_NEW);
+        iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID_NEW, Iobeam.DEFAULT_API_URL);
         assertNotNull(iobeam.deviceId);
         assertEquals(DEVICE_ID_NEW, iobeam.deviceId);
 
@@ -176,7 +149,7 @@ public class IobeamTest {
         iobeam.reset(false);  // simulates app being closed, 'false' keeps ID on disk
 
         // Test that the persisted device ID is used.
-        iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, null);
+        iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, null, Iobeam.DEFAULT_API_URL);
         assertEquals(FILE_PATH, iobeam.path);
         assertEquals(PROJECT_ID, iobeam.projectId);
         assertEquals(PROJECT_TOKEN, iobeam.projectToken);
@@ -193,7 +166,7 @@ public class IobeamTest {
         iobeam.reset();
         final String DEVICE_ID_NEW = "thisisadifferentid";
         assertNotEquals(DEVICE_ID, DEVICE_ID_NEW);
-        iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID_NEW);
+        iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID_NEW, Iobeam.DEFAULT_API_URL);
         assertNotNull(iobeam.deviceId);
         assertEquals(DEVICE_ID_NEW, iobeam.deviceId);
 
@@ -259,6 +232,8 @@ public class IobeamTest {
     public void testAddData() throws Exception {
         final String SERIES = "series1";
         DataPoint d1 = new DataPoint(1000, 2000);
+
+        Iobeam iobeam = getBuilder().build();
         iobeam.addData(SERIES, d1);
         Import ds = iobeam.getDataStore();
         Set<DataPoint> data = ds.getDataSet(SERIES);
@@ -268,9 +243,49 @@ public class IobeamTest {
     }
 
     @Test
+    public void testAddDataToSeries() throws Exception {
+        String[] seriesNames = {"series1", "series2", "series3"};
+        DataPoint[] datapoints = {
+            new DataPoint(1000, 2000),
+            new DataPoint(2000, 3000),
+            new DataPoint(3000, 4000)
+        };
+        Iobeam iobeam = getBuilder().build();
+        assertTrue(iobeam.addDataMapToSeries(seriesNames, datapoints));
+
+        Import ds = iobeam.getDataStore();
+        for (int i = 0; i < seriesNames.length; i++ ) {
+            Set<DataPoint> data = ds.getDataSet(seriesNames[i]);
+            assertEquals(1, data.size());
+            assertEquals(data.size(), iobeam.getDataSize(seriesNames[i]));
+            assertTrue(data.contains(datapoints[i]));
+        }
+    }
+
+    @Test
+    public void testAddDataToSeriesFail() throws Exception {
+        String[] seriesNames = {"series1", "series2"};
+        DataPoint[] datapoints = {
+            new DataPoint(1000, 2000),
+            new DataPoint(2000, 3000),
+            new DataPoint(3000, 4000)
+        };
+        Iobeam iobeam = getBuilder().build();
+        // both null
+        assertFalse(iobeam.addDataMapToSeries(null, null));
+        // one null
+        assertFalse(iobeam.addDataMapToSeries(null, datapoints));
+        assertFalse(iobeam.addDataMapToSeries(seriesNames, null));
+        // unequal size
+        assertFalse(iobeam.addDataMapToSeries(seriesNames, datapoints));
+    }
+
+    @Test
     public void testGetTotalSize() throws Exception {
         final String SERIES = "series1";
         final String SERIES2 = "series2";
+        Iobeam iobeam = getBuilder().build();
+
         iobeam.addData(SERIES, new DataPoint(0));
         iobeam.addData(SERIES, new DataPoint(1000));
         assertEquals(2, iobeam.getDataSize(SERIES));
@@ -282,6 +297,8 @@ public class IobeamTest {
     @Test
     public void testGetDataSize() throws Exception {
         final String SERIES = "series1";
+        Iobeam iobeam = getBuilder().build();
+
         // first point
         DataPoint d1 = new DataPoint(1000, 2000);
         iobeam.addData(SERIES, d1);
@@ -301,6 +318,8 @@ public class IobeamTest {
     @Test
     public void testRegisterDeviceError() throws Exception {
         boolean error = false;
+        Iobeam iobeam = new Iobeam.Builder(0, null).build();
+
         try {
             iobeam.registerDevice();
         } catch (Iobeam.NotInitializedException e) {
