@@ -554,6 +554,17 @@ public class Iobeam {
      * Returns the size of all of the data in all the series.
      *
      * @return Size of the data store, or 0 if it has not been made yet.
+     * @deprecated Use `getDataSize()` instead.
+     */
+    @Deprecated
+    public long getTotalDataSize() {
+        return getDataSize();
+    }
+
+    /**
+     * Returns the size of all of the data in all the series.
+     *
+     * @return Size of the data store, or 0 if it has not been made yet.
      */
     public long getDataSize() {
         synchronized (dataStoreLock) {
@@ -563,6 +574,17 @@ public class Iobeam {
 
             return dataStore.getTotalSize();
         }
+    }
+
+    /**
+     * Returns the size of the data set in a particular series.
+     * @param series The series to query
+     * @return Size of the data set, or 0 if series does not exist.
+     * @deprecated Use `getSeriesSize(series)` instead
+     */
+    @Deprecated
+    public int getDataSize(String series) {
+        return getSeriesSize(series);
     }
 
     /**
