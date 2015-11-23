@@ -8,9 +8,7 @@
 
     <name>${project.groupId}:${project.artifactId}</name>
     <url>https://www.iobeam.com/</url>
-    <description>
-        Java client library for the iobeam REST API.
-    </description>
+    <description>Java client library for the iobeam REST API.</description>
 
     <licenses>
         <license>
@@ -194,4 +192,3 @@
         </dependency>
     </dependencies>
 </project>
-

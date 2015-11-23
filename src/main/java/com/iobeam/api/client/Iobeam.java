@@ -28,7 +28,9 @@ import java.util.logging.Logger;
 public class Iobeam {
 
     private static final Logger logger = Logger.getLogger(Iobeam.class.getName());
-    public static final String API_URL = "https://api.iobeam.com";
+    public static final String DEFAULT_API_URL = "https://api.iobeam.com";
+    @Deprecated
+    public static final String API_URL = DEFAULT_API_URL;
     static final String DEVICE_FILENAME = "iobeam-device-id";
 
     /**
@@ -78,6 +80,7 @@ public class Iobeam {
         private final long projectId;
         private final String token;
         private String savePath;
+        private String backendUrl;
         private String deviceId;
         private boolean autoRetry;
 
@@ -85,6 +88,7 @@ public class Iobeam {
             this.projectId = projectId;
             this.token = projectToken;
             this.savePath = null;
+            this.backendUrl = DEFAULT_API_URL;
             this.deviceId = null;
             this.autoRetry = false;
         }
@@ -101,6 +105,11 @@ public class Iobeam {
             return this;
         }
 
+        public Builder setBackend(String url) {
+            this.backendUrl = url;
+            return this;
+        }
+
         public Builder autoRetry() {
             return this.autoRetry(true);
         }
@@ -113,8 +122,8 @@ public class Iobeam {
 
         public Iobeam build() {
             try {
-                Iobeam  client = new Iobeam(this.projectId, this.token, this.savePath,
-                                            this.deviceId);
+                Iobeam client = new Iobeam(this.projectId, this.token, this.savePath,
+                                           this.deviceId, this.backendUrl);
                 client.setAutoRetry(this.autoRetry);
 
                 return client;
@@ -135,9 +144,9 @@ public class Iobeam {
     private Import dataStore;
     private boolean autoRetry = false;
 
-    private Iobeam(long projectId, String projectToken, String path, String deviceId)
+    private Iobeam(long projectId, String projectToken, String path, String deviceId, String url)
         throws ApiException {
-        init(path, projectId, projectToken, deviceId);
+        init(path, projectId, projectToken, deviceId, url);
     }
 
     /**
@@ -168,7 +177,7 @@ public class Iobeam {
     @Deprecated
     public Iobeam(String path, long projectId, String projectToken, String deviceId)
         throws ApiException {
-        init(path, projectId, projectToken, deviceId);
+        init(path, projectId, projectToken, deviceId, DEFAULT_API_URL);
     }
 
     /**
@@ -179,9 +188,10 @@ public class Iobeam {
      * @param projectId    The numeric project ID to associate with.
      * @param projectToken The token to use when communicating with iobeam cloud.
      * @param deviceId     The device ID that should be used by the iobeam client.
+     * @param backendUrl   The base URL of API services to talk to
      * @throws ApiException Thrown if something goes wrong with initializing the device ID.
      */
-    void init(String path, long projectId, String projectToken, String deviceId)
+    void init(String path, long projectId, String projectToken, String deviceId, String backendUrl)
         throws ApiException {
         this.path = path;
         this.projectId = projectId;
@@ -191,7 +201,7 @@ public class Iobeam {
         }
         setDeviceId(deviceId);
 
-        client = new RestClient(API_URL, Executors.newSingleThreadExecutor());
+        client = new RestClient(backendUrl, Executors.newSingleThreadExecutor());
         File dir = path != null ? new File(path) : null;
         AuthHandler handler = new DefaultAuthHandler(client, projectId, projectToken, dir);
         client.setAuthenticationHandler(handler);
@@ -482,6 +492,14 @@ public class Iobeam {
         return dataStore;
     }
 
+    /* A lock should always be acquired before calling this method! */
+    private void _addDataWithoutLock(String seriesName, DataPoint dataPoint) {
+        if (dataStore == null) {
+            dataStore = new Import(deviceId, projectId);
+        }
+        dataStore.addDataPoint(seriesName, dataPoint);
+    }
+
     /**
      * Adds a data value to a particular series in the data store.
      *
@@ -490,11 +508,31 @@ public class Iobeam {
      */
     public void addData(String seriesName, DataPoint dataPoint) {
         synchronized (dataStoreLock) {
-            if (dataStore == null) {
-                dataStore = new Import(deviceId, projectId);
-            }
-            dataStore.addDataPoint(seriesName, dataPoint);
+            _addDataWithoutLock(seriesName, dataPoint);
         }
+    }
+
+    /**
+     * Adds a list of data points to a list of series in the data store. This is essentially a 'zip'
+     * operation on the points and series names, where the first point is put in the first series,
+     * the second point in the second series, etc. Both lists MUST be the same size.
+     *
+     * @param points      List of DataPoints to be added
+     * @param seriesNames List of corresponding series for the datapoints.
+     * @return True if the points are added; false if the lists are not the same size, or adding
+     * fails.
+     */
+    public boolean addDataMapToSeries(String[] seriesNames, DataPoint[] points) {
+        if (seriesNames == null || points == null || points.length != seriesNames.length) {
+            return false;
+        }
+
+        synchronized (dataStoreLock) {
+            for (int i = 0; i < seriesNames.length; i++) {
+                _addDataWithoutLock(seriesNames[i], points[i]);
+            }
+        }
+        return true;
     }
 
     void addBulkData(Map<String, Set<DataPoint>> data) {
