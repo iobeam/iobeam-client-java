@@ -15,7 +15,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -647,10 +646,8 @@ public class Iobeam {
                 req.execute();
             } catch (Exception e) {
                 if (autoRetry) {
-                    Import imp = (Import) req.getBuilder().getContent();
-                    Map<String, Set<DataPoint>> data = new HashMap<String, Set<DataPoint>>();
-                    data.putAll(imp.getSeries());
-                    addBulkData(data);
+                    ReinsertSendCallback cb = new ReinsertSendCallback(this);
+                    cb.innerCallback.failed(e, req);
                 }
 
                 // TODO: When we target Java7, we can just do a multi-exception catch

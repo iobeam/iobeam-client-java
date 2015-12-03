@@ -5,8 +5,10 @@ import com.iobeam.api.client.RestRequest;
 import com.iobeam.api.http.ContentType;
 import com.iobeam.api.http.RequestMethod;
 import com.iobeam.api.http.StatusCode;
+import com.iobeam.api.resource.DataBatch;
 import com.iobeam.api.resource.DataPoint;
 import com.iobeam.api.resource.Import;
+import com.iobeam.api.resource.ImportBatch;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +24,7 @@ public class ImportService {
     private final static Logger logger = Logger.getLogger(ImportService.class.getName());
     final static int REQ_MAX_POINTS = 1000;
 
+
     private final RestClient client;
 
     public ImportService(final RestClient client) {
@@ -32,8 +35,8 @@ public class ImportService {
 
         private static final String PATH = "/v1/imports";
 
-        protected Submit(Import imp) {
-            super(client, RequestMethod.POST, PATH + "/",
+        protected Submit(ImportBatch imp) {
+            super(client, RequestMethod.POST, PATH + "/?fmt=table",
                   ContentType.JSON, imp,
                   StatusCode.OK, Void.class);
         }
@@ -43,48 +46,37 @@ public class ImportService {
         return new Import(imp.getDeviceId(), imp.getProjectId());
     }
 
+    public List<Submit> submitBatch(final Import request) {
+        List<Submit> ret = new ArrayList<Submit>();
+
+        return ret;
+    }
+
+    private List<ImportBatch> convertImportToImportBatchs(Import imp) {
+        Map<String, Set<DataPoint>> store = imp.getSeries();
+        List<ImportBatch> ret = new ArrayList<ImportBatch>();
+        for (String name : store.keySet()) {
+            DataBatch batch = new DataBatch(new String[]{name});
+            for (DataPoint p : store.get(name)) {
+                batch.add(p.getTime(), new String[]{name}, new Object[]{p.getValue()});
+            }
+            List<DataBatch> batches = batch.split(REQ_MAX_POINTS / batch.getColumns().size());
+            for (DataBatch b : batches) {
+                ret.add(new ImportBatch(imp.getProjectId(), imp.getDeviceId(), b, true));
+            }
+        }
+
+        return ret;
+    }
+
     public List<Submit> submit(final Import request) {
         List<Submit> ret = new ArrayList<Submit>();
 
-        // Here we decide whether this request needs to be split up.
-        long totalSize = request.getTotalSize();
-        // Request is sufficiently small, send all at once.
-        if (totalSize <= REQ_MAX_POINTS) {
-            ret.add(new Submit(request));
-        } else {  // Request is too big.
-            Map<String, Set<DataPoint>> data = request.getSeries();
-
-            // For each series, we see if that series worth of points is small enough to send as
-            // a request. If so, we do that. Otherwise, we split the series up into multiple reqs,
-            // that are at most `REQ_MAX_POINTS`.
-            for (String k : data.keySet()) {
-                Set<DataPoint> pts = data.get(k);
-
-                if (pts.size() > REQ_MAX_POINTS) {
-                    Import temp = cloneImportMetadata(request);
-                    int i = 0;
-                    for (DataPoint d : pts) {
-                        temp.addDataPoint(k, d);
-                        i++;
-                        // Request is full, add to list and create next one.
-                        if (i == REQ_MAX_POINTS) {
-                            ret.add(new Submit(temp));
-                            temp = cloneImportMetadata(request);
-                            i = 0;
-                        }
-                    }
-                    // Add to list if any points were added to last one.
-                    if (i > 0) {
-                        ret.add(new Submit(temp));
-                    }
-                } else {  // Series fits in one request.
-                    Import temp = cloneImportMetadata(request);
-                    temp.addDataPointSet(k, pts);
-                    ret.add(new Submit(temp));
-                }
-            }
-
+        List<ImportBatch> reqs = convertImportToImportBatchs(request);
+        for (ImportBatch r : reqs) {
+            ret.add(new Submit(r));
         }
+
         return ret;
     }
 }
