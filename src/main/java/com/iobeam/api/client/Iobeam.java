@@ -66,7 +66,7 @@ public class Iobeam {
         }
 
         @Override
-        public void onSuccess(Map<String, Set<DataPoint>> data) {
+        public void onSuccess() {
         }
 
         @Override

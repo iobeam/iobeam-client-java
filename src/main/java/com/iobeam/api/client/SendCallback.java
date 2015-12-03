@@ -1,9 +1,8 @@
 package com.iobeam.api.client;
 
 import com.iobeam.api.resource.DataPoint;
-import com.iobeam.api.resource.Import;
+import com.iobeam.api.resource.ImportBatch;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -14,17 +13,18 @@ public abstract class SendCallback {
 
     final RestCallback<Void> innerCallback = new RestCallback<Void>() {
 
+        // TODO(rrk): Make this work with batches
         private Map<String, Set<DataPoint>> getDataFromRequest(RestRequest req) {
-            Import imp = (Import) req.getBuilder().getContent();
-            Map<String, Set<DataPoint>> ret = new HashMap<String, Set<DataPoint>>();
-            ret.putAll(imp.getSeries());
+            ImportBatch imp = (ImportBatch) req.getBuilder().getContent();
+            //Map<String, Set<DataPoint>> ret = new HashMap<String, Set<DataPoint>>();
+            //ret.putAll(imp.getSeries());
 
-            return ret;
+            return null;
         }
 
         @Override
         public void completed(Void result, RestRequest req) {
-            onSuccess(getDataFromRequest(req));
+            onSuccess();
         }
 
         @Override
@@ -36,7 +36,7 @@ public abstract class SendCallback {
     /**
      * Called when the data send request succeeds.
      */
-    public abstract void onSuccess(Map<String, Set<DataPoint>> data);
+    public abstract void onSuccess();
 
     /**
      * Called when the data send request fails.

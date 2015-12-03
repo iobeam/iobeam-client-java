@@ -38,14 +38,14 @@ public class SendCallbackTest {
 
         SendCallback cb = new SendCallback() {
             @Override
-            public void onSuccess(Map<String, Set<DataPoint>> data) {
-                assertTrue(data.containsKey("series1"));
+            public void onSuccess() {
+                /*assertTrue(data.containsKey("series1"));
                 assertTrue(data.containsKey("series2"));
                 assertEquals(1, data.get("series1").size());
                 assertEquals(2, data.get("series2").size());
                 assertTrue(data.get("series1").contains(dp1));
                 assertTrue(data.get("series2").contains(dp2));
-                assertTrue(data.get("series2").contains(dp3));
+                assertTrue(data.get("series2").contains(dp3));*/
             }
 
             @Override
@@ -62,7 +62,7 @@ public class SendCallbackTest {
 
         SendCallback cb = new SendCallback() {
             @Override
-            public void onSuccess(Map<String, Set<DataPoint>> data) {
+            public void onSuccess() {
                 // not used.
             }
 
