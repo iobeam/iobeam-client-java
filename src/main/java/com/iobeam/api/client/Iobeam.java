@@ -3,9 +3,11 @@ package com.iobeam.api.client;
 import com.iobeam.api.ApiException;
 import com.iobeam.api.auth.AuthHandler;
 import com.iobeam.api.auth.DefaultAuthHandler;
+import com.iobeam.api.resource.DataBatch;
 import com.iobeam.api.resource.DataPoint;
 import com.iobeam.api.resource.Device;
 import com.iobeam.api.resource.Import;
+import com.iobeam.api.resource.ImportBatch;
 import com.iobeam.api.service.DeviceService;
 import com.iobeam.api.service.ImportService;
 
@@ -15,6 +17,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -141,6 +144,7 @@ public class Iobeam {
     private RestClient client = null;
     private final Object dataStoreLock = new Object();
     private Import dataStore;
+    private List<DataBatch> dataBatches;
     private boolean autoRetry = false;
 
     private Iobeam(long projectId, String projectToken, String path, String deviceId, String url)
@@ -487,6 +491,7 @@ public class Iobeam {
         }
     }
 
+    @Deprecated
     Import getDataStore() {
         return dataStore;
     }
@@ -504,7 +509,9 @@ public class Iobeam {
      *
      * @param seriesName The name of the series that the data belongs to.
      * @param dataPoint  The DataPoint representing a data value at a particular time.
+     * @deprecated Use DataBatch and `trackDataBatch()` instead.
      */
+    @Deprecated
     public void addData(String seriesName, DataPoint dataPoint) {
         synchronized (dataStoreLock) {
             _addDataWithoutLock(seriesName, dataPoint);
@@ -520,7 +527,9 @@ public class Iobeam {
      * @param seriesNames List of corresponding series for the datapoints.
      * @return True if the points are added; false if the lists are not the same size, or adding
      * fails.
+     * @deprecated Use DataBatch and `trackDataBatch()` instead.
      */
+    @Deprecated
     public boolean addDataMapToSeries(String[] seriesNames, DataPoint[] points) {
         if (seriesNames == null || points == null || points.length != seriesNames.length) {
             return false;
@@ -546,6 +555,18 @@ public class Iobeam {
             for (String series : data.keySet()) {
                 dataStore.addDataPointSet(series, data.get(series));
             }
+        }
+    }
+
+    /**
+     * Track a DataBatch so that any data stored in it will be sent on subsequent
+     * send calls.
+     *
+     * @param batch Data stored in a batch/table format.
+     */
+    public void trackDataBatch(DataBatch batch) {
+        synchronized (dataStoreLock) {
+            dataBatches.add(batch);
         }
     }
 
@@ -612,19 +633,37 @@ public class Iobeam {
 
         // Synchronize so no more data is added to this object while we send.
         Import data;
+        List<DataBatch> batches;
         synchronized (dataStoreLock) {
             data = dataStore;
             dataStore = null;
+
+            if (dataBatches != null) {
+                batches = new ArrayList<DataBatch>(dataBatches.size());
+                for (DataBatch b : dataBatches) {
+                    if (b.getRows().size() > 0) {
+                        batches.add(DataBatch.snapshot(b));
+                        b.reset();
+                    }
+                }
+            } else {
+                batches = Collections.<DataBatch>emptyList();
+            }
         }
         // No data to send, log a warning and return an empty list.
-        if (data == null) {
+        if (data == null && batches.size() == 0) {
             logger.warning("No data to send.");
             return new ArrayList<ImportService.Submit>();
         }
         data.setDeviceId(deviceId);
 
+        List<ImportBatch> impBatches = new ArrayList<ImportBatch>();
+        for (DataBatch batch : batches) {
+            impBatches.add(new ImportBatch(projectId, deviceId, batch));
+        }
+
         ImportService service = new ImportService(client);
-        return service.submit(data);
+        return service.submit(data, impBatches);
     }
 
     /**

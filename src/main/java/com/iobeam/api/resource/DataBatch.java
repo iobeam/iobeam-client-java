@@ -177,6 +177,10 @@ public class DataBatch implements Serializable {
         return DataBatch.split(this, maxRows);
     }
 
+    public void reset() {
+        this.rows.clear();
+    }
+
     public static List<DataBatch> split(DataBatch batch, int maxRows) {
         if (maxRows <= 0) {
             throw new IllegalArgumentException("maxRows must be greater than 0");
@@ -192,6 +196,13 @@ public class DataBatch implements Serializable {
                 ret.add(temp);
             }
         }
+        return ret;
+    }
+
+    public static DataBatch snapshot(DataBatch batch) {
+        DataBatch ret = new DataBatch(batch.columns);
+        ret.rows.putAll(batch.rows);
+
         return ret;
     }
 }

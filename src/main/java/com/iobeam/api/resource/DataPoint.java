@@ -11,7 +11,10 @@ import java.util.List;
 /**
  * A resource representing a data point in a time series. This is represented by a timestamp and a
  * value that is either an integer (64-bits), a double, or a String.
+ *
+ * @deprecated Use the new DataBatch format instead.
  */
+@Deprecated
 public class DataPoint implements Serializable {
 
     private static final String KEY_TIME = "time";

@@ -11,6 +11,7 @@ import com.iobeam.api.resource.Import;
 import com.iobeam.api.resource.ImportBatch;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -69,10 +70,35 @@ public class ImportService {
         return ret;
     }
 
+    private List<ImportBatch> splitBigImportBatches(ImportBatch imp) {
+        List<ImportBatch> ret = new ArrayList<ImportBatch>();
+
+        DataBatch batch = imp.getData();
+        List<DataBatch> batches = batch.split(REQ_MAX_POINTS / batch.getColumns().size());
+        if (batches.size() == 1) {
+            ret.add(imp);
+        } else {
+            for (DataBatch b : batches) {
+                ret.add(new ImportBatch(imp.getProjectId(), imp.getDeviceId(), b));
+            }
+        }
+        return ret;
+    }
+
     public List<Submit> submit(final Import request) {
+        return submit(request, Collections.<ImportBatch>emptyList());
+    }
+
+    public List<Submit> submit(final Import request, final List<ImportBatch> batches) {
         List<Submit> ret = new ArrayList<Submit>();
 
         List<ImportBatch> reqs = convertImportToImportBatchs(request);
+        if (batches != null) {
+            for (ImportBatch ib : batches) {
+                reqs.addAll(splitBigImportBatches(ib));
+            }
+        }
+
         for (ImportBatch r : reqs) {
             ret.add(new Submit(r));
         }
