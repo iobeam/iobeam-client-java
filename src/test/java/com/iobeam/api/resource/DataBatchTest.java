@@ -119,4 +119,27 @@ public class DataBatchTest {
         }
     }
 
+    @Test
+    public void testSplit() throws Exception {
+        List<String> fields = new ArrayList<String>();
+        fields.add("a");
+        DataBatch batch = new DataBatch(fields);
+
+        Map<String, Object> row = new HashMap<String, Object>();
+        row.put("a", 100);
+        batch.add(0, row);
+        batch.add(1, row);
+        batch.add(2, row);
+        batch.add(3, row);
+
+        List<DataBatch> splits = DataBatch.split(batch, 2);
+        assertEquals(2, splits.size());
+
+        splits = DataBatch.split(batch, 3);
+        assertEquals(2, splits.size());
+
+        splits = DataBatch.split(batch, 4);
+        assertEquals(1, splits.size());
+    }
+
 }

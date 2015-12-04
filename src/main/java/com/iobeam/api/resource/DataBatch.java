@@ -45,7 +45,7 @@ public class DataBatch implements Serializable {
 
 
     private final TreeSet<String> columns;
-    private final Map<Long, Map<String, Object>> rows = new TreeMap<Long, Map<String, Object>>();
+    private final TreeMap<Long, Map<String, Object>> rows = new TreeMap<Long, Map<String, Object>>();
 
     /**
      * Constructs a DataBatch, using the list to construct a _set_ of columns.
@@ -122,6 +122,10 @@ public class DataBatch implements Serializable {
         return new ArrayList<String>(this.columns);
     }
 
+    public TreeMap<Long, Map<String, Object>> getRows() {
+        return new TreeMap<Long, Map<String, Object>>(this.rows);
+    }
+
     // NOTE(robatticus): Not sure this will ever be needed, since batches are only sent TO iobeam,
     // not received from iobeam.
     public static DataBatch fromJson(final JSONObject json) throws ParseException {
@@ -162,5 +166,27 @@ public class DataBatch implements Serializable {
                "columns=" + this.columns +
                "dataSize=" + this.rows.size() + 
                "}";
+    }
+
+    public List<DataBatch> split(int maxRows) {
+        return DataBatch.split(this, maxRows);
+    }
+
+    public static List<DataBatch> split(DataBatch batch, int maxRows) {
+        if (maxRows <= 0) {
+            throw new IllegalArgumentException("maxRows must be greater than 0");
+        }
+
+        List<DataBatch> ret = new ArrayList<DataBatch>();
+        if (batch.rows.size() <= maxRows) {
+            ret.add(batch);
+        } else {
+            for (int i = 0; i < batch.rows.size(); i += maxRows) {
+                DataBatch temp = new DataBatch(batch.columns);
+                temp.rows.putAll(batch.rows.subMap((long) i, (long) i + maxRows));
+                ret.add(temp);
+            }
+        }
+        return ret;
     }
 }
