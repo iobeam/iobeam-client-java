@@ -53,4 +53,14 @@ public class ImportBatch implements Serializable {
 
         return ret;
     }
+
+    @Override
+    public String toString() {
+        return "ImportBatch{" +
+               "projectId=" + this.projectId + ", " +
+               "deviceId=" + this.deviceId + ", " +
+               "legacy=" + this.legacy + ", " +
+               "data=" + this.data +
+               "}";
+    }
 }

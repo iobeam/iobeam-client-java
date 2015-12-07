@@ -238,7 +238,7 @@ public class IobeamTest {
         Import ds = iobeam.getDataStore();
         Set<DataPoint> data = ds.getDataSet(SERIES);
         assertEquals(1, data.size());
-        assertEquals(data.size(), iobeam.getSeriesSize(SERIES));
+        assertEquals(data.size(), iobeam.getDataSize(SERIES));
         assertTrue(data.contains(d1));
     }
 
@@ -286,11 +286,11 @@ public class IobeamTest {
         final String SERIES2 = "series2";
         Iobeam iobeam = getBuilder().build();
 
-        iobeam.addData(SERIES, new DataPoint(0));
-        iobeam.addData(SERIES, new DataPoint(1000));
-        assertEquals(2, iobeam.getSeriesSize(SERIES));
-        iobeam.addData(SERIES2, new DataPoint(2000));
-        assertEquals(1, iobeam.getSeriesSize(SERIES2));
+        iobeam.addData(SERIES, new DataPoint(0l, 0));
+        iobeam.addData(SERIES, new DataPoint(1l, 1000));
+        assertEquals(2, iobeam.getDataSize(SERIES));
+        iobeam.addData(SERIES2, new DataPoint(2l, 2000));
+        assertEquals(1, iobeam.getDataSize(SERIES2));
         assertEquals(3, iobeam.getDataSize());
     }
 
@@ -302,17 +302,17 @@ public class IobeamTest {
         // first point
         DataPoint d1 = new DataPoint(1000, 2000);
         iobeam.addData(SERIES, d1);
-        assertEquals(1, iobeam.getSeriesSize(SERIES));
+        assertEquals(1, iobeam.getDataSize(SERIES));
         // same point, no change
         iobeam.addData(SERIES, d1);
-        assertEquals(1, iobeam.getSeriesSize(SERIES));
+        assertEquals(1, iobeam.getDataSize(SERIES));
         // new point, +1
         DataPoint d2 = new DataPoint(2000, 4000);
         iobeam.addData(SERIES, d2);
-        assertEquals(2, iobeam.getSeriesSize(SERIES));
+        assertEquals(2, iobeam.getDataSize(SERIES));
 
         // series doesn't exist
-        assertEquals(0, iobeam.getSeriesSize("something_else"));
+        assertEquals(0, iobeam.getDataSize("something_else"));
     }
 
     @Test

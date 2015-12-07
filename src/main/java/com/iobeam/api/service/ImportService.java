@@ -89,10 +89,17 @@ public class ImportService {
         return submit(request, Collections.<ImportBatch>emptyList());
     }
 
-    public List<Submit> submit(final Import request, final List<ImportBatch> batches) {
+    public List<Submit> submit(final List<ImportBatch> batches) {
+        return submit(null, batches);
+    }
+
+    private List<Submit> submit(final Import request, final List<ImportBatch> batches) {
         List<Submit> ret = new ArrayList<Submit>();
 
-        List<ImportBatch> reqs = convertImportToImportBatchs(request);
+        List<ImportBatch> reqs = new ArrayList<ImportBatch>();
+        if (request != null) {
+            reqs.addAll(convertImportToImportBatchs(request));
+        }
         if (batches != null) {
             for (ImportBatch ib : batches) {
                 reqs.addAll(splitBigImportBatches(ib));

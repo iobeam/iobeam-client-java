@@ -18,9 +18,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
@@ -72,7 +72,7 @@ public class Iobeam {
         }
 
         @Override
-        public void onFailure(Throwable exc, Map<String, Set<DataPoint>> data) {
+        public void onFailure(Throwable exc, ImportBatch data) {
             client.addBulkData(data);
         }
     }
@@ -143,8 +143,10 @@ public class Iobeam {
 
     private RestClient client = null;
     private final Object dataStoreLock = new Object();
+    @Deprecated
     private Import dataStore;
-    private List<DataBatch> dataBatches;
+    private final List<DataBatch> dataBatches = new ArrayList<DataBatch>();
+    private Map<String, DataBatch> seriesToBatch = new HashMap<String, DataBatch>();
     private boolean autoRetry = false;
 
     private Iobeam(long projectId, String projectToken, String path, String deviceId, String url)
@@ -242,6 +244,7 @@ public class Iobeam {
 
         synchronized (dataStoreLock) {
             dataStore = null;
+            dataBatches.clear();
         }
 
         if (deleteFile) {
@@ -502,6 +505,14 @@ public class Iobeam {
             dataStore = new Import(deviceId, projectId);
         }
         dataStore.addDataPoint(seriesName, dataPoint);
+
+        DataBatch batch = seriesToBatch.get(seriesName);
+        if (batch == null) {
+            batch = new DataBatch(new String[]{seriesName});
+            seriesToBatch.put(seriesName, batch);
+            dataBatches.add(batch);
+        }
+        batch.add(dataPoint.getTime(), new String[]{seriesName}, new Object[]{dataPoint.getValue()});
     }
 
     /**
@@ -543,17 +554,27 @@ public class Iobeam {
         return true;
     }
 
-    void addBulkData(Map<String, Set<DataPoint>> data) {
+    @Deprecated
+    private void addBulkData(ImportBatch data) {
         if (data == null) {
             return;
         }
 
-        synchronized (dataStoreLock) {
-            if (dataStore == null) {
-                dataStore = new Import(deviceId, projectId);
+        if (data.isFromLegacy()) {
+            synchronized (dataStoreLock) {
+                if (dataStore == null) {
+                    dataStore = new Import(deviceId, projectId);
+                }
+
+                String key = data.getData().getColumns().get(0);
+                DataBatch db = seriesToBatch.get(key);
+                db.merge(data.getData());
             }
-            for (String series : data.keySet()) {
-                dataStore.addDataPointSet(series, data.get(series));
+        } else {
+            for (DataBatch db : dataBatches) {
+                if (db.hasSameColumns(data.getData())) {
+                    db.merge(data.getData());
+                }
             }
         }
     }
@@ -587,20 +608,20 @@ public class Iobeam {
      * @return Size of the data store, or 0 if it has not been made yet.
      */
     public long getDataSize() {
+        long size = 0;
         synchronized (dataStoreLock) {
-            if (dataStore == null) {
-                return 0;
+            for (DataBatch b : dataBatches) {
+                size += b.getDataSize();
             }
-
-            return dataStore.getTotalSize();
         }
+        return size;
     }
 
     /**
      * Returns the size of the data set in a particular series.
      * @param series The series to query
      * @return Size of the data set, or 0 if series does not exist.
-     * @deprecated Use `getSeriesSize(series)` instead
+     * @deprecated Use batch methods instead.
      */
     @Deprecated
     public int getDataSize(String series) {
@@ -613,13 +634,16 @@ public class Iobeam {
      * @param series The series to query
      * @return Size of the data set, or 0 if series does not exist.
      */
-    public int getSeriesSize(String series) {
+    private int getSeriesSize(String series) {
         synchronized (dataStoreLock) {
             if (dataStore == null) {
                 return 0;
             }
-            Import.DataSet set = dataStore.getDataSet(series);
-            return set == null ? 0 : set.size();
+            if (seriesToBatch.containsKey(series)) {
+                return (int) seriesToBatch.get(series).getDataSize();
+            } else {
+                return 0;
+            }
         }
     }
 
@@ -632,10 +656,8 @@ public class Iobeam {
         }
 
         // Synchronize so no more data is added to this object while we send.
-        Import data;
         List<DataBatch> batches;
         synchronized (dataStoreLock) {
-            data = dataStore;
             dataStore = null;
 
             if (dataBatches != null) {
@@ -651,19 +673,20 @@ public class Iobeam {
             }
         }
         // No data to send, log a warning and return an empty list.
-        if (data == null && batches.size() == 0) {
+        if (batches.size() == 0) {
             logger.warning("No data to send.");
             return new ArrayList<ImportService.Submit>();
         }
-        data.setDeviceId(deviceId);
 
         List<ImportBatch> impBatches = new ArrayList<ImportBatch>();
         for (DataBatch batch : batches) {
-            impBatches.add(new ImportBatch(projectId, deviceId, batch));
+            boolean legacy = batch.getColumns().size() == 1 &&
+                             seriesToBatch.containsKey(batch.getColumns().get(0));
+            impBatches.add(new ImportBatch(projectId, deviceId, batch, legacy));
         }
 
         ImportService service = new ImportService(client);
-        return service.submit(data, impBatches);
+        return service.submit(impBatches);
     }
 
     /**
