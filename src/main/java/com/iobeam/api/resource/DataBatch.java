@@ -118,6 +118,14 @@ public class DataBatch implements Serializable {
         this.rows.put(timestamp, new HashMap<String, Object>(data));
     }
 
+    public void merge(DataBatch other) {
+        if (!this.columns.equals(other.columns)) {
+            throw new IllegalArgumentException("DataBatch must have the same columns to merge");
+        }
+
+        this.rows.putAll(other.rows);
+    }
+
     /**
      * Return a list of the field names tracked by this batch.
      *
@@ -129,6 +137,17 @@ public class DataBatch implements Serializable {
 
     public TreeMap<Long, Map<String, Object>> getRows() {
         return new TreeMap<Long, Map<String, Object>>(this.rows);
+    }
+
+    public long getDataSize() {
+        return this.rows.size() * this.columns.size();
+    }
+
+    public boolean hasSameColumns(DataBatch other) {
+        if (other == null) {
+            return false;
+        }
+        return this.columns.equals(other.columns);
     }
 
     // NOTE(robatticus): Not sure this will ever be needed, since batches are only sent TO iobeam,
