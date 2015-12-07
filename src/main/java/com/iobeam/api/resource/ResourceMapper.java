@@ -70,33 +70,34 @@ public class ResourceMapper {
         if (clazz.equals(Import.class)) {
             ((Import) resource).serialize(out);
             return json;
+        } else if (clazz.equals(ImportBatch.class)) {
+            ((ImportBatch) resource).serialize(out);
+            return json;
         }
 
         for (final Method m : methods) {
 
             try {
                 final String name = m.getName();
-                if (Modifier.isPublic(m.getModifiers()) &&
-                    !name.equals("getClass") &&
-                    !name.equals("getDeclaringClass")) {
+                if (Modifier.isPublic(m.getModifiers()) && !name.equals("getClass")
+                    && !name.equals("getDeclaringClass")) {
                     final String key;
                     final JsonProperty jsonProp = m.getAnnotation(JsonProperty.class);
                     if (m.getAnnotation(JsonIgnore.class) != null) {
                         continue;
                     }
 
+                    boolean isGetter = name.length() > 3 && name.startsWith("get")
+                                       && Character.isUpperCase(name.charAt(3));
+                    boolean isBoolGetter = name.length() > 2 && name.startsWith("is")
+                                           && Character.isUpperCase(name.charAt(2));
+
                     if (jsonProp != null) {
                         key = jsonProp.value();
-                    } else if (name.length() > 3 &&
-                               name.startsWith("get") &&
-                               Character.isUpperCase(name.charAt(3))) {
-                        key = Character.toLowerCase(name.charAt(3))
-                              + name.substring(4);
-                    } else if (name.length() > 2 &&
-                               name.startsWith("is") &&
-                               Character.isUpperCase(name.charAt(2))) {
-                        key = Character.toLowerCase(name.charAt(2))
-                              + name.substring(3);
+                    } else if (isGetter) {
+                        key = Character.toLowerCase(name.charAt(3)) + name.substring(4);
+                    } else if (isBoolGetter) {
+                        key = Character.toLowerCase(name.charAt(2)) + name.substring(3);
                     } else {
                         key = null;
                     }
@@ -162,7 +163,6 @@ public class ResourceMapper {
      * we include in our jar.
      */
     public byte[] toJsonBytes(final Object resource) throws UnsupportedEncodingException {
-
         if (resource instanceof JSONObject) {
             final JSONObject json = (JSONObject) resource;
             return json.toString().getBytes("UTF-8");

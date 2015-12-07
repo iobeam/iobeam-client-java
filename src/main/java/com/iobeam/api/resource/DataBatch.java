@@ -6,6 +6,7 @@ import org.json.JSONObject;
 import java.io.Serializable;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +46,7 @@ public class DataBatch implements Serializable {
 
 
     private final TreeSet<String> columns;
-    private final Map<Long, Map<String, Object>> rows = new TreeMap<Long, Map<String, Object>>();
+    private final TreeMap<Long, Map<String, Object>> rows = new TreeMap<Long, Map<String, Object>>();
 
     /**
      * Constructs a DataBatch, using the list to construct a _set_ of columns.
@@ -69,6 +70,10 @@ public class DataBatch implements Serializable {
             logger.warning("Size mismatch in provided list of columns and resulting set of columns;" +
                            " list may have contained duplicates.");
         }
+    }
+
+    public DataBatch(String[] columns) {
+        this(Arrays.asList(columns));
     }
 
     /**
@@ -113,6 +118,14 @@ public class DataBatch implements Serializable {
         this.rows.put(timestamp, new HashMap<String, Object>(data));
     }
 
+    public void merge(DataBatch other) {
+        if (!this.columns.equals(other.columns)) {
+            throw new IllegalArgumentException("DataBatch must have the same columns to merge");
+        }
+
+        this.rows.putAll(other.rows);
+    }
+
     /**
      * Return a list of the field names tracked by this batch.
      *
@@ -120,6 +133,21 @@ public class DataBatch implements Serializable {
      */
     public List<String> getColumns() {
         return new ArrayList<String>(this.columns);
+    }
+
+    public TreeMap<Long, Map<String, Object>> getRows() {
+        return new TreeMap<Long, Map<String, Object>>(this.rows);
+    }
+
+    public long getDataSize() {
+        return this.rows.size() * this.columns.size();
+    }
+
+    public boolean hasSameColumns(DataBatch other) {
+        if (other == null) {
+            return false;
+        }
+        return this.columns.equals(other.columns);
     }
 
     // NOTE(robatticus): Not sure this will ever be needed, since batches are only sent TO iobeam,
@@ -162,5 +190,38 @@ public class DataBatch implements Serializable {
                "columns=" + this.columns +
                "dataSize=" + this.rows.size() + 
                "}";
+    }
+
+    public List<DataBatch> split(int maxRows) {
+        return DataBatch.split(this, maxRows);
+    }
+
+    public void reset() {
+        this.rows.clear();
+    }
+
+    public static List<DataBatch> split(DataBatch batch, int maxRows) {
+        if (maxRows <= 0) {
+            throw new IllegalArgumentException("maxRows must be greater than 0");
+        }
+
+        List<DataBatch> ret = new ArrayList<DataBatch>();
+        if (batch.rows.size() <= maxRows) {
+            ret.add(batch);
+        } else {
+            for (int i = 0; i < batch.rows.size(); i += maxRows) {
+                DataBatch temp = new DataBatch(batch.columns);
+                temp.rows.putAll(batch.rows.subMap((long) i, (long) i + maxRows));
+                ret.add(temp);
+            }
+        }
+        return ret;
+    }
+
+    public static DataBatch snapshot(DataBatch batch) {
+        DataBatch ret = new DataBatch(batch.columns);
+        ret.rows.putAll(batch.rows);
+
+        return ret;
     }
 }

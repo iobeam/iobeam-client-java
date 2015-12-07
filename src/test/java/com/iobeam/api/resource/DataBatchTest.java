@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
 public class DataBatchTest {
@@ -117,6 +118,82 @@ public class DataBatchTest {
                 }
             }
         }
+    }
+
+    @Test
+    public void testDataSize() throws Exception {
+        DataBatch b = new DataBatch(new String[]{"a", "b", "c"});
+        assertEquals(0, b.getDataSize());
+        b.add(0, new String[]{"a", "b", "c"}, new Object[]{1, 2, 3});
+        assertEquals(3, b.getDataSize());
+        b.add(1, new String[]{"a", "b"}, new Object[]{4, 5});
+        assertEquals(6, b.getDataSize());
+        b.reset();
+        assertEquals(0, b.getDataSize());
+    }
+
+    @Test
+    public void testHasSameColumns() throws Exception {
+        DataBatch b1 = new DataBatch(new String[]{"a", "b", "c"});
+        assertTrue(b1.hasSameColumns(b1));
+        assertFalse(b1.hasSameColumns(null));
+
+        DataBatch b2 = new DataBatch(new String[]{"a", "c"});
+        assertFalse(b1.hasSameColumns(b2));
+        assertFalse(b2.hasSameColumns(b1));
+
+        DataBatch b3 = new DataBatch(new String[]{"a", "c", "b"});
+        assertTrue(b1.hasSameColumns(b3));
+        assertTrue(b3.hasSameColumns(b1));
+    }
+
+    @Test
+    public void testMerge() throws Exception {
+        DataBatch b1 = new DataBatch(new String[]{"a"});
+        b1.add(1, new String[]{"a"}, new Object[]{1});
+        b1.add(2, new String[]{"a"}, new Object[]{2});
+        b1.add(3, new String[]{"a"}, new Object[]{3});
+
+        DataBatch b2 = new DataBatch(new String[]{"a"});
+        b2.add(4, new String[]{"a"}, new Object[]{4});
+        b2.add(5, new String[]{"a"}, new Object[]{5});
+        b2.add(6, new String[]{"a"}, new Object[]{6});
+
+        b1.merge(b2);
+        assertEquals(6, b1.getDataSize());
+
+        DataBatch wrong = new DataBatch(new String[]{"b"});
+        wrong.add(7, new String[]{"b"}, new Object[]{7});
+        try {
+            b1.merge(wrong);
+            assertTrue(false);
+        } catch (IllegalArgumentException e) {
+            // do nothing
+        }
+
+    }
+
+    @Test
+    public void testSplit() throws Exception {
+        List<String> fields = new ArrayList<String>();
+        fields.add("a");
+        DataBatch batch = new DataBatch(fields);
+
+        Map<String, Object> row = new HashMap<String, Object>();
+        row.put("a", 100);
+        batch.add(0, row);
+        batch.add(1, row);
+        batch.add(2, row);
+        batch.add(3, row);
+
+        List<DataBatch> splits = DataBatch.split(batch, 2);
+        assertEquals(2, splits.size());
+
+        splits = DataBatch.split(batch, 3);
+        assertEquals(2, splits.size());
+
+        splits = DataBatch.split(batch, 4);
+        assertEquals(1, splits.size());
     }
 
 }
