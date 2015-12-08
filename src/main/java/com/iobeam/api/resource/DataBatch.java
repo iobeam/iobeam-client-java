@@ -163,7 +163,7 @@ public class DataBatch implements Serializable {
      */
     public JSONObject toJson() {
         JSONObject ret = new JSONObject();
-        JSONArray columns = new JSONArray(new String[]{"time"});
+        JSONArray columns = new JSONArray(Arrays.asList(new String[]{"time"}));
         for (String f : this.columns) {
             columns.put(f);
         }
@@ -176,7 +176,8 @@ public class DataBatch implements Serializable {
             row.put(ts);
             Map<String, Object> temp = rows.get(ts);
             for (String f : this.columns) {
-                row.put(temp.get(f));
+                Object val = temp.get(f);
+                row.put(val != null ? val : JSONObject.NULL);
             }
             data.put(row);
         }

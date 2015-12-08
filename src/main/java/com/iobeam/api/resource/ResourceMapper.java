@@ -15,6 +15,7 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -123,7 +124,7 @@ public class ResourceMapper {
                                 } else if (object instanceof Collection) {
                                     result = new JSONArray((Collection) object);
                                 } else if (object.getClass().isArray()) {
-                                    result = new JSONArray(object);
+                                    result = new JSONArray(Arrays.asList(object));
                                 } else if (object instanceof Map) {
                                     result = new JSONObject((Map) object);
                                 } else if (object instanceof Date) {

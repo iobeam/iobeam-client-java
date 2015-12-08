@@ -40,7 +40,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <version.json>20151123</version.json>
+        <version.json>20140107</version.json>
 
         <skipITs>true</skipITs>
         <skipPGP>true</skipPGP>
@@ -186,12 +186,14 @@
             <artifactId>junit</artifactId>
             <version>4.11</version>
             <scope>test</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
             <version>1.9.5</version>
             <scope>test</scope>
+            <optional>true</optional>
         </dependency>
     </dependencies>
 </project>
