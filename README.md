@@ -1,14 +1,16 @@
 # iobeam Java / Android Library
 
-**[iobeam](http://iobeam.com)** is a data platform for connected devices. 
+**[iobeam](http://iobeam.com)** is a data platform for connected devices.
 
-This is a Java library for sending data to the **iobeam Cloud**, e.g., from within an Android app.
-For more information on the iobeam Cloud, please read our [full API documentation](http://docs.iobeam.com).
+This is a Java library for sending data to **iobeam**, e.g., from within an
+Android app.
+For more information on iobeam, please read our [full API
+documentation](http://docs.iobeam.com).
 
-*Please note that we are currently invite-only. You will need an invite 
+*Please note that we are currently invite-only. You will need an invite
 to generate a valid token and use our APIs. (Sign up [here](http://iobeam.com) for an invite.)*
 
-## Sample apps ##
+## Sample apps
 
 We've written a couple sample Android apps to illustrate how to use this library:
 
@@ -21,15 +23,15 @@ Slightly more advanced example that uses Callbacks. Measures the signal strength
 (received signal strength indicator). Measurements are taken every 20 seconds, and are uploaded to iobeam in
 batches of 3 or more measurements.
 
-## Before you start ##
+## Before you start
 
-Before you can start sending data to the iobeam Cloud, you'll need a `project_id` and 
+Before you can start sending data to iobeam, you'll need a `project_id` and
 `project_token` (with write-access enabled) for a valid **iobeam** account.
 You can get these easily with our
 [Command-line interface tool](https://github.com/iobeam/iobeam).
 
 
-## Installation ##
+## Installation
 
 To install to your local Maven repository:
 
@@ -54,9 +56,9 @@ If you are building an Android app, add the following lines to your `app/build.g
 
 It is also available on Maven Central.
 
-## Overview ##
+## Overview
 
-This library allows Java clients to send data to the iobeam Cloud. 
+This library allows Java clients to send data to iobeam.
 
 At a high-level, here's how it works:
 
@@ -65,23 +67,24 @@ At a high-level, here's how it works:
 1. Register your device to get an auto-generated `device_id`. Optionally, you can initialize the
  object with a `device_id` in the previous step and skip this step
 
-1. Create a `DataPoint` object for each time-series data point
+1. Create a `DataBatch` for storing data by streams and have the `Iobeam` object
+ track it.
 
-1. Add the `DataPoint` under your `series_name` (e.g., "temperature")
+1. Add data values to the `DataBatch` as you get them.
 
-1. When you're ready, send your data to the iobeam Cloud 
+1. When you're ready, send your data to iobeam.
 
 
-## Getting Started ##
+## Getting Started
 
 Here's how to get started, using a basic example that sends temperature data to iobeam.
 (For simplicity, let's assume that the current temperature can be accessed
 with `getTemperature()`).
 
-(Reminder: Before you start, create a user account, project, and project_token (with write access) 
+(Reminder: Before you start, create a user account, project, and project_token (with write access)
 using the iobeam APIs or Command-line interface. Write down your new `project_id` and `project_token`.)
 
-### iobeam Initialization ###
+### iobeam Initialization
 
 There are several ways to initialize the `Iobeam` library. All require that you have `project_id`
 and `project_token` before hand.
@@ -93,13 +96,17 @@ you will need to register one in code. There are two ways to register a `device_
 
 (1) Let iobeam generate one for you:
 
-    Iobeam iobeam = new Iobeam.Builder(PROJECT_ID, PROJECT_TOKEN).saveIdToPath(PATH).build();
-    iobeam.registerDeviceAsync();
+```java
+Iobeam iobeam = new Iobeam.Builder(PROJECT_ID, PROJECT_TOKEN).saveIdToPath(PATH).build();
+iobeam.registerDeviceAsync();
+```
 
 (2) Provide your own (must be unique to your project):
 
-    Iobeam iobeam = new Iobeam.Builder(PROJECT_ID, PROJECT_TOKEN).saveIdToPath(PATH).build();
-    iobeam.registerDeviceWithIdAsync("my_desired_device_id");
+```java
+Iobeam iobeam = new Iobeam.Builder(PROJECT_ID, PROJECT_TOKEN).saveIdToPath(PATH).build();
+iobeam.registerDeviceWithIdAsync("my_desired_device_id");
+```
 
 The `device_id` will be saved to disk at the path `PATH`. On Android, this would be set to something
 like `this.getFilesDir().getAbsolutePath()` , which is internal storage for applications. On future
@@ -112,9 +119,11 @@ provide a _different_ `device_id` to `registerDeviceWithIdAsync()`, the old one 
 If you have registered a `device_id` (e.g. using our [CLI](https://github.com/iobeam/iobeam)),
 you can pass this in the constructor and skip the registration step.
 
-    Iobeam iobeam = new Iobeam.Builder(PROJECT_ID, PROJECT_TOKEN).saveIdToPath(PATH)
-        .setDeviceId(DEVICE_ID).build();
-    
+```java
+Iobeam iobeam = new Iobeam.Builder(PROJECT_ID, PROJECT_TOKEN).saveIdToPath(PATH)
+    .setDeviceId(DEVICE_ID).build();
+```
+
 You *must* have registered some other way (CLI, website, previous installation, etc) for this to
 work.
 
@@ -123,69 +132,75 @@ work.
 If you don't want the `device_id` to be automatically stored for you, set the `path` parameter in
 either constructor to be `null`:
 
-    // Without registered id:
-    Iobeam iobeam = new Iobeam.Builder(PROJECT_ID, PROJECT_TOKEN).build();
-    
-    // With registered id:
-    Iobeam iobeam = new Iobeam.Builder(PROJECT_ID, PROJECT_TOKEN)
-        .setDeviceId(DEVICE_ID).build();
+```java
+// Without registered id:
+Iobeam iobeam = new Iobeam.Builder(PROJECT_ID, PROJECT_TOKEN).build();
+
+// With registered id:
+Iobeam iobeam = new Iobeam.Builder(PROJECT_ID, PROJECT_TOKEN)
+    .setDeviceId(DEVICE_ID).build();
+```
 
 This is useful for cases where you want to persist the ID yourself (e.g. in a settings file), or if
 you are making `Iobeam` objects that are temporary. For example, if the device you are using acts
 as a relay or proxy for other devices, it could get the `device_id` from those devices and have
 no need to save it.
 
-### Tracking Time-series Data ###
+### Tracking Time-series Data
 
-For each time-series data point, create a `DataPoint` object:
+To track time-series data, you need to decide how to break down your data
+streams into "batches", a collection of data streams grouped together. You
+create a `DataBatch` with a list of stream names that the batch contains.
+So if you're tracking just temperature in a batch:
 
-    double t = getTemperature();
-    DataPoint d = new DataPoint(t);
+```java
+DataBatch batch = new DataBatch(new String[]{"temperature"});
+iobeam.trackDataBatch(batch);
+```
 
-    // DataPoint d = new DataPoint(System.currentTimeInMillis(), t); is equivalent to above
+Then for every data point, you'll want to add it to the batch with a timestamp
+when the measurement occurred:
 
-(The timestamp provided should be in milliseconds since epoch. The value can be integral or real.)
+```java
+long timestamp = System.currentTimeInMillis();
+batch.add(timestamp, new String[]{"temperature"}, new Object[]{getTemperature()});
+```
 
-Now, pick a name for your data series (e.g., "temperature"), and add the `DataPoint` under that 
-series:
+You pass in the values keyed by which column they belong to. In the above format
+you do that by providing an array of column names and an equal size `Object` array
+of corresponding values. You can create a `Map` that maps columns/streams to
+ values:
 
-    iobeam.addData("temperature", d);
+```java
+long timestamp = System.currentTimeInMillis();
+Map<String, Object> values = new HashMap<String, Object>();
+values.put("temperature", getTemperature());
+batch.add(timestamp, values);
+```
 
-Here's another example that takes and stores a temperature reading every second:
+Note that the `DataBatch` object can hold several streams at once. For
+example, if you also had a `getHumidity()` function, you could track both in
+the same `DataBatch`:
 
-    while (true) {
-        DataPoint d = new DataPoint(getTemperature());
-        iobeam.addData("temperature", d);
-        Thread.sleep(1000);
-    }
+```java
+String[] columns = new String[]{"temperature", "humidity"};
+DataBatch batch = new DataBatch(columns);
+iobeam.trackDataBatch(batch);
 
-Note that the `Iobeam` object can hold several series at once. For example, 
-if you also had a `getHumidity()` function, you could add both data points to the same
-`Iobeam`:
+long timestamp = System.currentTimeInMillis();
+Object[] values = new Object[2];
+values[0] = getTemperature();
+values[1] = getHumidity();
+batch.add(timestamp, columns, values);
+```
 
-    while (true) {
-        DataPoint dt = new DataPoint(getTemperature());
-        DataPoint dh = new DataPoint(getHumidity());
-
-        iobeam.addData("temperature", dt);
-        iobeam.addData("humidity", dh);
-
-        Thread.sleep(1000);
-    }
-
-Optionally, if your data comes in some delimited format, we offer a way to parse it into a List
-of `DataPoint`s. For example, if you have a String of temperature and humidity in the form of
-`20,60` (temp of 20, humidity of 60) and want to parse it:
-
-    String str = "20,60";
-    List<DataPoint> points = DataPoint.parseDataPoints(str, ",", Integer.class);
-    iobeam.addData("temperature", points.get(0));
-    iobeam.addData("humidity", points.get(1));
+Not every `add()` call needs all streams to have a value; if a stream is omitted
+from both arrays (or from the keys of a `Map`), it will be assumed to be `null`.
 
 
-### Connecting to the iobeam Cloud ###
+### Connecting to iobeam
 
-You can send your data to the iobeam Cloud in two ways: synchronously and asynchronously:
+You can send your data to iobeam in two ways: synchronously and asynchronously:
 
     iobeam.send(); // blocking
     iobeam.sendAsync(); // non-blocking
@@ -195,36 +210,40 @@ data as provided, an `ApiException` is thrown (e.g. incorrect project ID or devi
 etc). `IOException` is thrown in the case of network connectivity issues.
 
 
-### Full Example ###
+### Full Example
 
 Here's the full source code for our example:
+```java
+// Initialization
+try {
+    Iobeam iobeam = new Iobeam.Builder(PROJECT_ID, PROJECT_TOKEN).saveIdToPath(PATH).build();
 
-    // Initialization
-    try {
-        Iobeam iobeam = new Iobeam.Builder(PROJECT_ID, PROJECT_TOKEN).saveIdToPath(PATH).build();
-        if (iobeam.getDeviceId() == null)
-            iobeam.registerDeviceAsync(null); // Registers using auto-generated device_id
-    } catch (ApiException e) {
-        e.printStackTrace();
-    }
+    if (iobeam.getDeviceId() == null)
+        iobeam.registerDeviceAsync(null); // Registers using auto-generated device_id
+} catch (ApiException e) {
+    e.printStackTrace();
+}
 
-    ...
+...
 
-    // Data gathering
-    DataPoint dt = new DataPoint(getTemperature());
-    DataPoint dh = new DataPoint(getHumidity());
+// Data gathering
+String[] columns = new String[]{"temperature", "humidity"};
+DataBatch batch = new DataBatch(columns);
+iobeam.trackDataBatch(batch);
 
-    iobeam.addData("temperature", dt);
-    iobeam.addData("humidity", dh);
+long timestamp = System.currentTimeInMillis();
+Object[] values = new Object[2];
+values[0] = getTemperature();
+values[1] = getHumidity();
+batch.add(timestamp, columns, values);
 
-    ...
+...
 
-    // Data transmission
-    try {
-        iobeam.sendAsync();
-    } catch (ApiException e) {
-        e.printStackTrace();
-    }
-
-
+// Data transmission
+try {
+    iobeam.sendAsync();
+} catch (ApiException e) {
+    e.printStackTrace();
+}
+```
 These instructions should hopefully be enough to get you started with the library!
