@@ -68,7 +68,7 @@ public class Iobeam {
         }
 
         @Override
-        public void onSuccess() {
+        public void onSuccess(ImportBatch data) {
         }
 
         @Override

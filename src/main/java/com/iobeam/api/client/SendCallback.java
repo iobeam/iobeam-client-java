@@ -11,7 +11,7 @@ public abstract class SendCallback {
 
         @Override
         public void completed(Void result, RestRequest req) {
-            onSuccess();
+            onSuccess((ImportBatch) req.getBuilder().getContent());
         }
 
         @Override
@@ -23,7 +23,7 @@ public abstract class SendCallback {
     /**
      * Called when the data send request succeeds.
      */
-    public abstract void onSuccess();
+    public abstract void onSuccess(ImportBatch data);
 
     /**
      * Called when the data send request fails.
