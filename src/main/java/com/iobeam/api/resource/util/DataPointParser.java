@@ -5,7 +5,7 @@ import com.iobeam.api.resource.DataPoint;
 import java.util.ArrayList;
 import java.util.List;
 
-
+@Deprecated
 public class DataPointParser {
 
     // TODO: There should probably be some error conditions that throw exceptions or fail nicely.
