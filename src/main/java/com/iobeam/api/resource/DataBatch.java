@@ -234,6 +234,16 @@ public class DataBatch implements Serializable {
         return DataBatch.split(this, maxRows);
     }
 
+    /**
+     * Alias for `reset()`.
+     */
+    public void clear() {
+        reset();
+    }
+
+    /**
+     * Removes all the data from the DataBatch
+     */
     public void reset() {
         this.rows.clear();
     }
