@@ -40,39 +40,70 @@ public class Device implements Serializable {
         }
     }
 
-    private final Id id;
+    public static final class Spec {
+
+        private final String id;
+        private final String name;
+        private final String type;
+
+        public Spec() {
+            this(null, null, null);
+        }
+
+        public Spec(String id) {
+            this(id, null, null);
+        }
+
+        public Spec(String id, String name) {
+            this(id, name, null);
+        }
+
+        public Spec(String id, String name, String type) {
+            this.id = id;
+            this.name = name;
+            this.type = type;
+        }
+    }
+
     private final long projectId;
-    private final String name;
-    private final String type;
+    private final Spec spec;
     private final Date created;
 
+    // Should use Device.Spec for forward compatibility/flexibility. Will remove in 0.6.0
+    // TODO(robatticus) Remove in 0.6.0
+    @Deprecated
     public Device(String id,
                   long projectId,
                   String name,
                   String type,
                   Date created) {
-        this(new Id(id), projectId, name, type, created);
+        this(projectId, new Device.Spec(id, name, type), created);
     }
 
+    // Should use Device.Spec for forward compatibility/flexibility. Will remove in 0.6.0
+    // TODO(robatticus) Remove in 0.6.0
+    @Deprecated
     public Device(Id id,
                   long projectId,
                   String name,
                   String type,
                   Date created) {
-        this.id = id;
+        this(projectId, new Device.Spec(id.getId(), name, type), created);
+    }
+
+    public Device(long projectId, Device.Spec spec, Date created) {
         this.projectId = projectId;
-        this.name = name;
-        this.type = type;
+        this.spec = spec;
         this.created = created;
     }
 
     public Device(Device d) {
-        this(d.id, d.projectId, d.name, d.type, d.created);
+        this(d.projectId, d.spec, d.created);
     }
 
     @JsonProperty("device_id")
     public String getId() {
-        return id.getId();
+        return spec.id;
     }
 
     @JsonProperty("project_id")
@@ -82,12 +113,12 @@ public class Device implements Serializable {
 
     @JsonProperty("device_name")
     public String getName() {
-        return name;
+        return spec.name;
     }
 
     @JsonProperty("device_type")
     public String getType() {
-        return type;
+        return spec.type;
     }
 
     public Date getCreated() {
@@ -101,16 +132,17 @@ public class Device implements Serializable {
         String name = json.optString("device_name");
         String type = json.optString("device_type");
         Date created = Util.DATE_FORMAT.parse(json.getString("created"));
-        return new Device(id, projectId, name, type, created);
+        Spec spec = new Spec(id, name, type);
+        return new Device(projectId, spec, created);
     }
 
     @Override
     public String toString() {
         return "Device{" +
-               "id='" + id.getId() + "'" +
+               "id='" + spec.id + "'" +
                ", projectId=" + projectId +
-               ", name='" + name + "'" +
-               ", type='" + type + "'" +
+               ", name='" + spec.name + "'" +
+               ", type='" + spec.type + "'" +
                ", created=" + (created != null ? Util.DATE_FORMAT.format(created) : null) +
                '}';
     }

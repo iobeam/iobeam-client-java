@@ -5,7 +5,11 @@ import org.json.JSONObject;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -86,5 +90,25 @@ public class ResourceMapperTest {
         json = new JSONObject(new String(res, "UTF-8"));
         assertEquals(200, json.getLong("time"));
         assertEquals("11", json.getString("value"));
+    }
+
+    @Test
+    public void testImportBatchSerialization() throws Exception {
+        Set<String> fields = new HashSet<String>();
+        fields.add("b");
+        fields.add("a");
+        DataBatch batch = new DataBatch(fields);
+
+        Map<String, Object> row = new HashMap<String, Object>();
+        row.put("a", 100);
+        row.put("b", 200);
+        batch.add(0, row);
+
+        ImportBatch impBatch = new ImportBatch(1, "test", batch);
+        byte[] res = mapper.toJsonBytes(impBatch);
+        JSONObject json = new JSONObject(new String(res, "UTF-8"));
+        assertEquals(1l, json.getLong("project_id"));
+        assertEquals("test", json.getString("device_id"));
+        System.out.println(json);
     }
 }

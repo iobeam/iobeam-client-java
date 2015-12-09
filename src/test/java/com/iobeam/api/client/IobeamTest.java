@@ -286,12 +286,12 @@ public class IobeamTest {
         final String SERIES2 = "series2";
         Iobeam iobeam = getBuilder().build();
 
-        iobeam.addData(SERIES, new DataPoint(0));
-        iobeam.addData(SERIES, new DataPoint(1000));
+        iobeam.addData(SERIES, new DataPoint(0l, 0));
+        iobeam.addData(SERIES, new DataPoint(1l, 1000));
         assertEquals(2, iobeam.getDataSize(SERIES));
-        iobeam.addData(SERIES2, new DataPoint(2000));
+        iobeam.addData(SERIES2, new DataPoint(2l, 2000));
         assertEquals(1, iobeam.getDataSize(SERIES2));
-        assertEquals(3, iobeam.getTotalDataSize());
+        assertEquals(3, iobeam.getDataSize());
     }
 
     @Test

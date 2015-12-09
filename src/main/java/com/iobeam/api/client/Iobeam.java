@@ -3,9 +3,11 @@ package com.iobeam.api.client;
 import com.iobeam.api.ApiException;
 import com.iobeam.api.auth.AuthHandler;
 import com.iobeam.api.auth.DefaultAuthHandler;
+import com.iobeam.api.resource.DataBatch;
 import com.iobeam.api.resource.DataPoint;
 import com.iobeam.api.resource.Device;
 import com.iobeam.api.resource.Import;
+import com.iobeam.api.resource.ImportBatch;
 import com.iobeam.api.service.DeviceService;
 import com.iobeam.api.service.ImportService;
 
@@ -15,10 +17,10 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
@@ -55,22 +57,22 @@ public class Iobeam {
     }
 
     /**
-     * DataCallback used when autoRetry is set.
+     * SendCallback used when autoRetry is set.
      */
-    private static final class ReinsertDataCallback extends DataCallback {
+    private static final class ReinsertSendCallback extends SendCallback {
 
         private final Iobeam client;
 
-        public ReinsertDataCallback(Iobeam iobeam) {
+        public ReinsertSendCallback(Iobeam iobeam) {
             this.client = iobeam;
         }
 
         @Override
-        public void onSuccess() {
+        public void onSuccess(ImportBatch data) {
         }
 
         @Override
-        public void onFailure(Throwable exc, Map<String, Set<DataPoint>> data) {
+        public void onFailure(Throwable exc, ImportBatch data) {
             client.addBulkData(data);
         }
     }
@@ -141,7 +143,10 @@ public class Iobeam {
 
     private RestClient client = null;
     private final Object dataStoreLock = new Object();
+    @Deprecated
     private Import dataStore;
+    private final List<DataBatch> dataBatches = new ArrayList<DataBatch>();
+    private Map<String, DataBatch> seriesToBatch = new HashMap<String, DataBatch>();
     private boolean autoRetry = false;
 
     private Iobeam(long projectId, String projectToken, String path, String deviceId, String url)
@@ -239,6 +244,7 @@ public class Iobeam {
 
         synchronized (dataStoreLock) {
             dataStore = null;
+            dataBatches.clear();
         }
 
         if (deleteFile) {
@@ -295,7 +301,7 @@ public class Iobeam {
             throw new NotInitializedException();
         }
         DeviceService service = new DeviceService(client);
-        return service.add(projectId, deviceId, deviceName, null, null);
+        return service.add(projectId, new Device.Spec(deviceId, deviceName, null), null);
     }
 
     /**
@@ -488,6 +494,7 @@ public class Iobeam {
         }
     }
 
+    @Deprecated
     Import getDataStore() {
         return dataStore;
     }
@@ -498,6 +505,14 @@ public class Iobeam {
             dataStore = new Import(deviceId, projectId);
         }
         dataStore.addDataPoint(seriesName, dataPoint);
+
+        DataBatch batch = seriesToBatch.get(seriesName);
+        if (batch == null) {
+            batch = new DataBatch(new String[]{seriesName});
+            seriesToBatch.put(seriesName, batch);
+            dataBatches.add(batch);
+        }
+        batch.add(dataPoint.getTime(), new String[]{seriesName}, new Object[]{dataPoint.getValue()});
     }
 
     /**
@@ -505,7 +520,9 @@ public class Iobeam {
      *
      * @param seriesName The name of the series that the data belongs to.
      * @param dataPoint  The DataPoint representing a data value at a particular time.
+     * @deprecated Use DataBatch and `trackDataBatch()` instead.
      */
+    @Deprecated
     public void addData(String seriesName, DataPoint dataPoint) {
         synchronized (dataStoreLock) {
             _addDataWithoutLock(seriesName, dataPoint);
@@ -521,7 +538,9 @@ public class Iobeam {
      * @param seriesNames List of corresponding series for the datapoints.
      * @return True if the points are added; false if the lists are not the same size, or adding
      * fails.
+     * @deprecated Use DataBatch and `trackDataBatch()` instead.
      */
+    @Deprecated
     public boolean addDataMapToSeries(String[] seriesNames, DataPoint[] points) {
         if (seriesNames == null || points == null || points.length != seriesNames.length) {
             return false;
@@ -535,18 +554,40 @@ public class Iobeam {
         return true;
     }
 
-    void addBulkData(Map<String, Set<DataPoint>> data) {
+    @Deprecated
+    private void addBulkData(ImportBatch data) {
         if (data == null) {
             return;
         }
 
+        if (data.isFromLegacy()) {
+            synchronized (dataStoreLock) {
+                if (dataStore == null) {
+                    dataStore = new Import(deviceId, projectId);
+                }
+
+                String key = data.getData().getColumns().get(0);
+                DataBatch db = seriesToBatch.get(key);
+                db.merge(data.getData());
+            }
+        } else {
+            for (DataBatch db : dataBatches) {
+                if (db.hasSameColumns(data.getData())) {
+                    db.merge(data.getData());
+                }
+            }
+        }
+    }
+
+    /**
+     * Track a DataBatch so that any data stored in it will be sent on subsequent
+     * send calls.
+     *
+     * @param batch Data stored in a batch/table format.
+     */
+    public void trackDataBatch(DataBatch batch) {
         synchronized (dataStoreLock) {
-            if (dataStore == null) {
-                dataStore = new Import(deviceId, projectId);
-            }
-            for (String series : data.keySet()) {
-                dataStore.addDataPointSet(series, data.get(series));
-            }
+            dataBatches.add(batch);
         }
     }
 
@@ -554,15 +595,37 @@ public class Iobeam {
      * Returns the size of all of the data in all the series.
      *
      * @return Size of the data store, or 0 if it has not been made yet.
+     * @deprecated Use `getDataSize()` instead.
      */
+    @Deprecated
     public long getTotalDataSize() {
-        synchronized (dataStoreLock) {
-            if (dataStore == null) {
-                return 0;
-            }
+        return getDataSize();
+    }
 
-            return dataStore.getTotalSize();
+    /**
+     * Returns the size of all of the data in all the series.
+     *
+     * @return Size of the data store, or 0 if it has not been made yet.
+     */
+    public long getDataSize() {
+        long size = 0;
+        synchronized (dataStoreLock) {
+            for (DataBatch b : dataBatches) {
+                size += b.getDataSize();
+            }
         }
+        return size;
+    }
+
+    /**
+     * Returns the size of the data set in a particular series.
+     * @param series The series to query
+     * @return Size of the data set, or 0 if series does not exist.
+     * @deprecated Use batch methods instead.
+     */
+    @Deprecated
+    public int getDataSize(String series) {
+        return getSeriesSize(series);
     }
 
     /**
@@ -571,13 +634,16 @@ public class Iobeam {
      * @param series The series to query
      * @return Size of the data set, or 0 if series does not exist.
      */
-    public int getDataSize(String series) {
+    private int getSeriesSize(String series) {
         synchronized (dataStoreLock) {
             if (dataStore == null) {
                 return 0;
             }
-            Import.DataSet set = dataStore.getDataSet(series);
-            return set == null ? 0 : set.size();
+            if (seriesToBatch.containsKey(series)) {
+                return (int) seriesToBatch.get(series).getDataSize();
+            } else {
+                return 0;
+            }
         }
     }
 
@@ -590,20 +656,37 @@ public class Iobeam {
         }
 
         // Synchronize so no more data is added to this object while we send.
-        Import data;
+        List<DataBatch> batches;
         synchronized (dataStoreLock) {
-            data = dataStore;
             dataStore = null;
+
+            if (dataBatches != null) {
+                batches = new ArrayList<DataBatch>(dataBatches.size());
+                for (DataBatch b : dataBatches) {
+                    if (b.getRows().size() > 0) {
+                        batches.add(DataBatch.snapshot(b));
+                        b.reset();
+                    }
+                }
+            } else {
+                batches = Collections.<DataBatch>emptyList();
+            }
         }
         // No data to send, log a warning and return an empty list.
-        if (data == null) {
+        if (batches.size() == 0) {
             logger.warning("No data to send.");
             return new ArrayList<ImportService.Submit>();
         }
-        data.setDeviceId(deviceId);
+
+        List<ImportBatch> impBatches = new ArrayList<ImportBatch>();
+        for (DataBatch batch : batches) {
+            boolean legacy = batch.getColumns().size() == 1 &&
+                             seriesToBatch.containsKey(batch.getColumns().get(0));
+            impBatches.add(new ImportBatch(projectId, deviceId, batch, legacy));
+        }
 
         ImportService service = new ImportService(client);
-        return service.submit(data);
+        return service.submit(impBatches);
     }
 
     /**
@@ -625,10 +708,8 @@ public class Iobeam {
                 req.execute();
             } catch (Exception e) {
                 if (autoRetry) {
-                    Import imp = (Import) req.getBuilder().getContent();
-                    Map<String, Set<DataPoint>> data = new HashMap<String, Set<DataPoint>>();
-                    data.putAll(imp.getSeries());
-                    addBulkData(data);
+                    ReinsertSendCallback cb = new ReinsertSendCallback(this);
+                    cb.innerCallback.failed(e, req);
                 }
 
                 // TODO: When we target Java7, we can just do a multi-exception catch
@@ -664,13 +745,13 @@ public class Iobeam {
      * @throws ApiException Thrown is the client is not initialized or if the device id has not been
      *                      set.
      */
-    public void sendAsync(DataCallback callback) throws ApiException {
+    public void sendAsync(SendCallback callback) throws ApiException {
         List<ImportService.Submit> reqs = prepareDataRequests();
         for (ImportService.Submit req : reqs) {
             if (callback == null && !autoRetry) {
                 req.executeAsync();
             } else if (callback == null) {
-                req.executeAsync(new ReinsertDataCallback(this).innerCallback);
+                req.executeAsync(new ReinsertSendCallback(this).innerCallback);
             } else {
                 req.executeAsync(callback.innerCallback);
             }

@@ -11,7 +11,10 @@ import java.util.List;
 /**
  * A resource representing a data point in a time series. This is represented by a timestamp and a
  * value that is either an integer (64-bits), a double, or a String.
+ *
+ * @deprecated Use the new DataBatch format instead.
  */
+@Deprecated
 public class DataPoint implements Serializable {
 
     private static final String KEY_TIME = "time";
@@ -40,6 +43,7 @@ public class DataPoint implements Serializable {
      * @deprecated com.iobeam.api.resource.util.DataPointParser.parse() should be used instead. Will
      * be removed in the next release.
      */
+    // TODO(robatticus) Remove in 0.6.0
     @Deprecated
     public static List<DataPoint> parseDataPoints(String points,
                                                   String splitRegex,
@@ -60,6 +64,7 @@ public class DataPoint implements Serializable {
      * @deprecated com.iobeam.api.resource.util.DataPointParser.parse() should be used instead. Will
      * be removed in the next release.
      */
+    // TODO(robatticus) Remove in 0.6.0
     @Deprecated
     public static List<DataPoint> parseDataPoints(String points,
                                                   String splitRegex,

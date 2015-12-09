@@ -4,13 +4,11 @@
 
     <groupId>com.iobeam</groupId>
     <artifactId>iobeam-client-java</artifactId>
-    <version>0.4.5</version>
+    <version>0.5.0</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
     <url>https://www.iobeam.com/</url>
-    <description>
-        Java client library for the iobeam REST API.
-    </description>
+    <description>Java client library for the iobeam REST API.</description>
 
     <licenses>
         <license>
@@ -32,7 +30,7 @@
         <connection>scm:git:git@github.com:iobeam/iobeam-client-java.git</connection>
         <developerConnection>scm:git:git@github.com:iobeam/iobeam-client-java.git</developerConnection>
         <url>git@github.com:iobeam/iobeam-client-java.git</url>
-        <tag>v0.4.5</tag>
+        <tag>v0.5.0</tag>
     </scm>
 
     <properties>
@@ -41,6 +39,9 @@
         <maven.compiler.source>1.6</maven.compiler.source>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <version.json>20140107</version.json>
+
         <skipITs>true</skipITs>
         <skipPGP>true</skipPGP>
         <skipDoc>true</skipDoc>
@@ -178,19 +179,21 @@
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20140107</version>
+            <version>${version.json}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.11</version>
             <scope>test</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
             <version>1.9.5</version>
             <scope>test</scope>
+            <optional>true</optional>
         </dependency>
     </dependencies>
 </project>

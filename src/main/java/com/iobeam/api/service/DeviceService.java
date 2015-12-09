@@ -96,11 +96,18 @@ public class DeviceService {
      * @param deviceType Device type description (optional).
      * @param created    Creation date for this date; if null, current time will be used.
      * @return An Add API request that can be executed to add the device to the project.
+     * @deprecated Use add(long, Device.Spec, Date) instead. Will be removed in next release.
      */
+    @Deprecated
     public Add add(long projectId, String deviceId, String deviceName, String deviceType,
                    Date created) {
+
+        return add(projectId, new Device.Spec(deviceId, deviceName, deviceType), created);
+    }
+
+    public Add add(long projectId, Device.Spec spec, Date created) {
         Date date = created == null ? new Date(System.currentTimeMillis()) : created;
-        Device req = new Device(deviceId, projectId, deviceName, deviceType, date);
+        Device req = new Device(projectId, spec, date);
         return new Add(req);
     }
 
