@@ -90,12 +90,29 @@ public class DataBatch implements Serializable {
      * @param values The list of values for a field to value mapping
      */
     public void add(long timestamp, String[] columns, Object[] values) {
-        if (columns.length != values.length) {
+        add(timestamp, Arrays.asList(columns), Arrays.asList(values));
+    }
+
+    /**
+     * Add a data row to the batch at a particular timestamp.
+     *
+     * This method will throw a `MismatchedLengthException` if the size of `columns` and
+     * `values` are not the same.
+     *
+     * This method will throw an `UnknownFieldException` if `data` contains a key that is
+     * not in the set of columns this batch was constructed with.
+     *
+     * @param timestamp Timestamp for all data points
+     * @param columns The list of columns for a field to value mapping
+     * @param values The list of values for a field to value mapping
+     */
+    public void add(long timestamp, List<String> columns, List<Object> values) {
+        if (columns.size() != values.size()) {
             throw new MismatchedLengthException();
         }
         Map<String, Object> temp = new HashMap<String, Object>();
-        for (int i = 0; i < columns.length; i++) {
-            temp.put(columns[i], values[i]);
+        for (int i = 0; i < columns.size(); i++) {
+            temp.put(columns.get(i), values.get(i));
         }
         add(timestamp, temp);
     }
@@ -118,8 +135,13 @@ public class DataBatch implements Serializable {
         this.rows.put(timestamp, new HashMap<String, Object>(data));
     }
 
+    /**
+     * Add the entirety of another DataBatch into this one.
+     *
+     * @param other The other DataBatch to merge in
+     */
     public void merge(DataBatch other) {
-        if (!this.columns.equals(other.columns)) {
+        if (!this.hasSameColumns(other)) {
             throw new IllegalArgumentException("DataBatch must have the same columns to merge");
         }
 
@@ -135,19 +157,34 @@ public class DataBatch implements Serializable {
         return new ArrayList<String>(this.columns);
     }
 
+    /**
+     * Return the rows of this batch as a Map from time to a Map from column to value.
+     *
+     * @return Map from a time to a Map from column o value.
+     */
     public TreeMap<Long, Map<String, Object>> getRows() {
         return new TreeMap<Long, Map<String, Object>>(this.rows);
     }
 
+    /**
+     * The number of data values currently stored in this batch, i.e., the product
+     * of the number of rows times the number of columns. (Empty data values are
+     * counted).
+     *
+     * @return Size of this DataBatch
+     */
     public long getDataSize() {
         return this.rows.size() * this.columns.size();
     }
 
+    /**
+     * Check if another DataBatch has the same columns as this one (weak equality check).
+     *
+     * @param other Other DataBatch to compare
+     * @return True if the set of columns are the same
+     */
     public boolean hasSameColumns(DataBatch other) {
-        if (other == null) {
-            return false;
-        }
-        return this.columns.equals(other.columns);
+        return other != null && this.columns.equals(other.columns);
     }
 
     // NOTE(robatticus): Not sure this will ever be needed, since batches are only sent TO iobeam,
