@@ -94,6 +94,22 @@ public class DataBatch implements Serializable {
     }
 
     /**
+     * Add a data row to the batch with the current time.
+     *
+     * This method will throw a `MismatchedLengthException` if the length of `columns` and
+     * `values` are not the same.
+     *
+     * This method will throw an `UnknownFieldException` if `data` contains a key that is
+     * not in the set of columns this batch was constructed with.
+     *
+     * @param columns The list of columns for a field to value mapping
+     * @param values The list of values for a field to value mapping
+     */
+    public void add(String[] columns, Object[] values) {
+        add(System.currentTimeMillis(), columns, values);
+    }
+
+    /**
      * Add a data row to the batch at a particular timestamp.
      *
      * This method will throw a `MismatchedLengthException` if the size of `columns` and
@@ -118,6 +134,22 @@ public class DataBatch implements Serializable {
     }
 
     /**
+     * Add a data row to the batch with the current time.
+     *
+     * This method will throw a `MismatchedLengthException` if the size of `columns` and
+     * `values` are not the same.
+     *
+     * This method will throw an `UnknownFieldException` if `data` contains a key that is
+     * not in the set of columns this batch was constructed with.
+     *
+     * @param columns The list of columns for a field to value mapping
+     * @param values The list of values for a field to value mapping
+     */
+    public void add(List<String> columns, List<Object> values) {
+        add(System.currentTimeMillis(), columns, values);
+    }
+
+    /**
      * Add a data row to the batch at a particular timestamp.
      *
      * This method will throw an `UnknownFieldException` if `data` contains a key that is
@@ -133,6 +165,18 @@ public class DataBatch implements Serializable {
             }
         }
         this.rows.put(timestamp, new HashMap<String, Object>(data));
+    }
+
+    /**
+     * Add a data row to the batch with the current time.
+     *
+     * This method will throw an `UnknownFieldException` if `data` contains a key that is
+     * not in the set of columns this batch was constructed with.
+     *
+     * @param data Map that has field names as keys and the data value as values.
+     */
+    public void add(Map<String, Object> data) {
+        add(System.currentTimeMillis(), data);
     }
 
     /**
