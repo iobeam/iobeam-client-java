@@ -164,7 +164,7 @@ Then for every data point, you'll want to add it to the batch with a timestamp
 when the measurement occurred:
 
 ```java
-long timestamp = System.currentTimeInMillis();
+long timestamp = System.currentTimeMillis();
 batch.add(timestamp, new String[]{"temperature"}, new Object[]{getTemperature()});
 ```
 
@@ -174,7 +174,7 @@ of corresponding values. You can create a `Map` that maps columns/streams to
  values:
 
 ```java
-long timestamp = System.currentTimeInMillis();
+long timestamp = System.currentTimeMillis();
 Map<String, Object> values = new HashMap<String, Object>();
 values.put("temperature", getTemperature());
 batch.add(timestamp, values);
@@ -233,7 +233,7 @@ String[] columns = new String[]{"temperature", "humidity"};
 DataBatch batch = new DataBatch(columns);
 iobeam.trackDataBatch(batch);
 
-long timestamp = System.currentTimeInMillis();
+long timestamp = System.currentTimeMillis();
 Object[] values = new Object[2];
 values[0] = getTemperature();
 values[1] = getHumidity();
