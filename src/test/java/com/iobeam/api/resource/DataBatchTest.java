@@ -170,7 +170,29 @@ public class DataBatchTest {
         } catch (IllegalArgumentException e) {
             // do nothing
         }
+    }
 
+    @Test
+    public void testMergeWrong() throws Exception {
+        DataBatch b1 = new DataBatch(new String[]{"a"});
+
+        DataBatch wrong = new DataBatch(new String[]{"b"});
+        wrong.add(7, new String[]{"b"}, new Object[]{7});
+        try {
+            b1.merge(wrong);
+            assertTrue(false);
+        } catch (IllegalArgumentException e) {
+            // do nothing
+        }
+
+        wrong = new DataBatch(new String[]{"a", "b"});
+        wrong.add(7, new String[]{"a"}, new Object[]{7});
+        try {
+            b1.merge(wrong);
+            assertTrue(false);
+        } catch (IllegalArgumentException e) {
+            // do nothing
+        }
     }
 
     @Test

@@ -79,10 +79,12 @@ public class ResourceMapper {
         for (final Method m : methods) {
 
             try {
-                final String name = m.getName();
-                if (Modifier.isPublic(m.getModifiers()) && !name.equals("getClass")
-                    && !name.equals("getDeclaringClass")) {
-                    final String key;
+                if (Modifier.isPublic(m.getModifiers())) {
+                    final String name = m.getName();
+                    if (name.equals("getClass") || name.equals("getDeclaringClass")) {
+                        continue;
+                    }
+
                     final JsonProperty jsonProp = m.getAnnotation(JsonProperty.class);
                     if (m.getAnnotation(JsonIgnore.class) != null) {
                         continue;
@@ -93,6 +95,7 @@ public class ResourceMapper {
                     boolean isBoolGetter = name.length() > 2 && name.startsWith("is")
                                            && Character.isUpperCase(name.charAt(2));
 
+                    final String key;
                     if (jsonProp != null) {
                         key = jsonProp.value();
                     } else if (isGetter) {
@@ -100,7 +103,7 @@ public class ResourceMapper {
                     } else if (isBoolGetter) {
                         key = Character.toLowerCase(name.charAt(2)) + name.substring(3);
                     } else {
-                        key = null;
+                        continue;  // on to the next method
                     }
 
                     if (key != null) {
@@ -132,8 +135,7 @@ public class ResourceMapper {
                                 } else {
                                     Package objectPackage = object.getClass().getPackage();
                                     String objectPackageName =
-                                        objectPackage != null ? objectPackage
-                                            .getName() : "";
+                                        objectPackage != null ? objectPackage.getName() : "";
                                     if (objectPackageName.startsWith("java.")
                                         || objectPackageName.startsWith("javax.")
                                         || object.getClass().getClassLoader() == null) {
