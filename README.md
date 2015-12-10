@@ -189,7 +189,7 @@ String[] columns = new String[]{"temperature", "humidity"};
 DataBatch batch = new DataBatch(columns);
 iobeam.trackDataBatch(batch);
 
-long timestamp = System.currentTimeInMillis();
+long timestamp = System.currentTimeMillis();
 Object[] values = new Object[2];
 values[0] = getTemperature();
 values[1] = getHumidity();
