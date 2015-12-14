@@ -5,7 +5,7 @@ import com.iobeam.api.client.RestRequest;
 import com.iobeam.api.http.ContentType;
 import com.iobeam.api.http.RequestMethod;
 import com.iobeam.api.http.StatusCode;
-import com.iobeam.api.resource.DataBatch;
+import com.iobeam.api.resource.DataStore;
 import com.iobeam.api.resource.DataPoint;
 import com.iobeam.api.resource.Import;
 import com.iobeam.api.resource.ImportBatch;
@@ -57,12 +57,12 @@ public class ImportService {
         Map<String, Set<DataPoint>> store = imp.getSeries();
         List<ImportBatch> ret = new ArrayList<ImportBatch>();
         for (String name : store.keySet()) {
-            DataBatch batch = new DataBatch(new String[]{name});
+            DataStore batch = new DataStore(new String[]{name});
             for (DataPoint p : store.get(name)) {
                 batch.add(p.getTime(), new String[]{name}, new Object[]{p.getValue()});
             }
-            List<DataBatch> batches = batch.split(REQ_MAX_POINTS / batch.getColumns().size());
-            for (DataBatch b : batches) {
+            List<DataStore> batches = batch.split(REQ_MAX_POINTS / batch.getColumns().size());
+            for (DataStore b : batches) {
                 ret.add(new ImportBatch(imp.getProjectId(), imp.getDeviceId(), b, true));
             }
         }
@@ -73,12 +73,12 @@ public class ImportService {
     private List<ImportBatch> splitBigImportBatches(ImportBatch imp) {
         List<ImportBatch> ret = new ArrayList<ImportBatch>();
 
-        DataBatch batch = imp.getData();
-        List<DataBatch> batches = batch.split(REQ_MAX_POINTS / batch.getColumns().size());
+        DataStore batch = imp.getData();
+        List<DataStore> batches = batch.split(REQ_MAX_POINTS / batch.getColumns().size());
         if (batches.size() == 1) {
             ret.add(imp);
         } else {
-            for (DataBatch b : batches) {
+            for (DataStore b : batches) {
                 ret.add(new ImportBatch(imp.getProjectId(), imp.getDeviceId(), b));
             }
         }

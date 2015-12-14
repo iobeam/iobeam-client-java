@@ -97,7 +97,7 @@ public class ResourceMapperTest {
         Set<String> fields = new HashSet<String>();
         fields.add("b");
         fields.add("a");
-        DataBatch batch = new DataBatch(fields);
+        DataStore batch = new DataStore(fields);
 
         Map<String, Object> row = new HashMap<String, Object>();
         row.put("a", 100);
