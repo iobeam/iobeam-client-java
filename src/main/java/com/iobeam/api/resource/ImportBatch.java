@@ -12,14 +12,14 @@ public class ImportBatch implements Serializable {
 
     private final long projectId;
     private final String deviceId;
-    private final DataBatch data;
+    private final DataStore data;
     private final boolean legacy;
 
-    public ImportBatch(long projectId, String deviceId, DataBatch data) {
+    public ImportBatch(long projectId, String deviceId, DataStore data) {
         this(projectId, deviceId, data, false);
     }
 
-    public ImportBatch(long projectId, String deviceId, DataBatch data, boolean legacy) {
+    public ImportBatch(long projectId, String deviceId, DataStore data, boolean legacy) {
         this.projectId = projectId;
         this.deviceId = deviceId;
         this.data = data;
@@ -34,7 +34,7 @@ public class ImportBatch implements Serializable {
         return this.deviceId;
     }
 
-    public DataBatch getData() {
+    public DataStore getData() {
         return this.data;
     }
 

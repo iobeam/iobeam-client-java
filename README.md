@@ -69,10 +69,9 @@ At a high-level, here's how it works:
 1. Register your device to get an auto-generated `device_id`. Optionally, you can initialize the
  object with a `device_id` in the previous step and skip this step
 
-1. Create a `DataBatch` for storing data by streams and have the `Iobeam` object
- track it.
+1. Create a `DataStore` for storing data by streams, which will be tracked by the `Iobeam` object.
 
-1. Add data values to the `DataBatch` as you get them.
+1. Add data values to the `DataStore` as you get them.
 
 1. When you're ready, send your data to iobeam.
 
@@ -151,21 +150,25 @@ no need to save it.
 ### Tracking Time-series Data
 
 To track time-series data, you need to decide how to break down your data
-streams into "batches", a collection of data streams grouped together. You
-create a `DataBatch` with a list of stream names that the batch contains.
-So if you're tracking just temperature in a batch:
+streams into "stores", a collection of data streams grouped together. You
+create a `DataStore` with a list of stream names that the store contains.
+So if you're tracking just temperature in a store:
 
 ```java
-DataBatch batch = new DataBatch(new String[]{"temperature"});
-iobeam.trackDataBatch(batch);
+DataStore store = iobeam.createAndTrackDataStore(new String[]{"temperature"});
 ```
 
-Then for every data point, you'll want to add it to the batch with a timestamp
+By doing this, the iobeam client now knows about your `DataStore` (it is "tracking" it), and
+each subsequent call to send data will include any new data from this `DataStore`.
+So, for every data point, you'll want to add it to the store with a timestamp
 when the measurement occurred:
 
 ```java
 long timestamp = System.currentTimeMillis();
-batch.add(timestamp, new String[]{"temperature"}, new Object[]{getTemperature()});
+store.add(timestamp, new String[]{"temperature"}, new Object[]{getTemperature()});
+
+// Or, to just use the current timestamp:
+store.add(new String[]{"temperature"}, new Object[]{getTemperature()});
 ```
 
 You pass in the values keyed by which column they belong to. In the above format
@@ -174,26 +177,23 @@ of corresponding values. You can create a `Map` that maps columns/streams to
  values:
 
 ```java
-long timestamp = System.currentTimeMillis();
 Map<String, Object> values = new HashMap<String, Object>();
 values.put("temperature", getTemperature());
-batch.add(timestamp, values);
+store.add(values);
 ```
 
-Note that the `DataBatch` object can hold several streams at once. For
+Note that the `DataStore` object can hold several streams at once. For
 example, if you also had a `getHumidity()` function, you could track both in
-the same `DataBatch`:
+the same `DataStore`:
 
 ```java
 String[] columns = new String[]{"temperature", "humidity"};
-DataBatch batch = new DataBatch(columns);
-iobeam.trackDataBatch(batch);
+DataStore store = iobeam.createAndTrackDataStore(columns);
 
-long timestamp = System.currentTimeMillis();
 Object[] values = new Object[2];
 values[0] = getTemperature();
 values[1] = getHumidity();
-batch.add(timestamp, columns, values);
+store.add(columns, values);
 ```
 
 Not every `add()` call needs all streams to have a value; if a stream is omitted
@@ -230,14 +230,12 @@ try {
 
 // Data gathering
 String[] columns = new String[]{"temperature", "humidity"};
-DataBatch batch = new DataBatch(columns);
-iobeam.trackDataBatch(batch);
+DataStore store = createAndTrackDataStore(columns);
 
-long timestamp = System.currentTimeMillis();
 Object[] values = new Object[2];
 values[0] = getTemperature();
 values[1] = getHumidity();
-batch.add(timestamp, columns, values);
+store.add(columns, values);
 
 ...
 
