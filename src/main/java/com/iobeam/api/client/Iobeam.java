@@ -588,7 +588,7 @@ public class Iobeam {
      * @param columns Columns in the DataStore
      * @return DataStore for storing data for a given set of columns.
      */
-    public DataStore createAndTrackDataStore(Set<String> columns) {
+    public DataStore createDataStore(Set<String> columns) {
         DataStore b = new DataStore(columns);
         trackDataStore(b);
 
@@ -602,7 +602,7 @@ public class Iobeam {
      * @param columns Columns in the DataStore
      * @return DataStore for storing data for a given set of columns.
      */
-    public DataStore createAndTrackDataStore(List<String> columns) {
+    public DataStore createDataStore(List<String> columns) {
         DataStore b = new DataStore(columns);
         trackDataStore(b);
 
@@ -616,8 +616,8 @@ public class Iobeam {
      * @param columns Columns in the DataStore
      * @return DataStore for storing data for a given set of columns.
      */
-    public DataStore createAndTrackDataStore(String... columns) {
-        return createAndTrackDataStore(Arrays.asList(columns));
+    public DataStore createDataStore(String... columns) {
+        return createDataStore(Arrays.asList(columns));
     }
 
     /**
