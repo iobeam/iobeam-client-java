@@ -155,7 +155,7 @@ create a `DataStore` with a list of stream names that the store contains.
 So if you're tracking just temperature in a store:
 
 ```java
-DataStore store = iobeam.createAndTrackDataStore(new String[]{"temperature"});
+DataStore store = iobeam.createDataStore(new String[]{"temperature"});
 ```
 
 By doing this, the iobeam client now knows about your `DataStore` (it is "tracking" it), and
@@ -188,7 +188,7 @@ the same `DataStore`:
 
 ```java
 String[] columns = new String[]{"temperature", "humidity"};
-DataStore store = iobeam.createAndTrackDataStore(columns);
+DataStore store = iobeam.createDataStore(columns);
 
 Object[] values = new Object[2];
 values[0] = getTemperature();
@@ -230,7 +230,7 @@ try {
 
 // Data gathering
 String[] columns = new String[]{"temperature", "humidity"};
-DataStore store = createAndTrackDataStore(columns);
+DataStore store = iobeam.createDataStore(columns);
 
 Object[] values = new Object[2];
 values[0] = getTemperature();
