@@ -1,6 +1,6 @@
 package com.iobeam.api.client;
 
-import com.iobeam.api.resource.DataBatch;
+import com.iobeam.api.resource.DataStore;
 import com.iobeam.api.resource.DataPoint;
 import com.iobeam.api.resource.Import;
 import com.iobeam.api.resource.ImportBatch;
@@ -34,7 +34,7 @@ public class SendCallbackTest {
         SendCallback cb = new SendCallback() {
             @Override
             public void onSuccess(ImportBatch data) {
-                DataBatch db = data.getData();
+                DataStore db = data.getData();
                 assertEquals(1, db.getColumns().size());
                 assertTrue(db.getColumns().contains("series1"));
                 assertEquals(1, db.getRows().size());
@@ -60,7 +60,7 @@ public class SendCallbackTest {
 
             @Override
             public void onFailure(Throwable exc, ImportBatch data) {
-                DataBatch db = data.getData();
+                DataStore db = data.getData();
                 assertEquals(1, db.getColumns().size());
                 assertTrue(db.getColumns().contains("series1"));
                 assertEquals(1, db.getRows().size());
