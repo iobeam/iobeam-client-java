@@ -193,37 +193,6 @@ public class Iobeam {
     }
 
     /**
-     * Constructs an Iobeam object without a device ID.
-     *
-     * @param path         Directory where the device ID file, iobeam-device-id, should be written.
-     *                     If null, the device ID is <b>not</b> persisted.
-     * @param projectId    The numeric project ID to associate with.
-     * @param projectToken The token to use when communicating with iobeam cloud.
-     * @throws ApiException Thrown if something goes wrong with initializing the device ID.
-     */
-    @Deprecated
-    public Iobeam(String path, long projectId, String projectToken)
-        throws ApiException {
-        this(path, projectId, projectToken, null);
-    }
-
-    /**
-     * Constructs an Iobeam object with a device ID.
-     *
-     * @param path         Directory where the device ID file, iobeam-device-id, should be written.
-     *                     If null, the device ID is <b>not</b> persisted.
-     * @param projectId    The numeric project ID to associate with.
-     * @param projectToken The token to use when communicating with iobeam cloud.
-     * @param deviceId     Pre-registered device id to be used.
-     * @throws ApiException Thrown if something goes wrong with initializing the device ID.
-     */
-    @Deprecated
-    public Iobeam(String path, long projectId, String projectToken, String deviceId)
-        throws ApiException {
-        init(path, projectId, projectToken, deviceId, DEFAULT_API_URL);
-    }
-
-    /**
      * (Re-)initializes the iobeam client.
      *
      * @param path         Directory where the device ID file, iobeam-device-id, should be written.
