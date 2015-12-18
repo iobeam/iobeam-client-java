@@ -16,6 +16,7 @@ import java.util.Set;
 /**
  * A resource representing an import request resource for IOBeam.
  */
+@Deprecated
 public class Import implements Serializable {
 
     private String deviceId;
@@ -24,7 +25,8 @@ public class Import implements Serializable {
     /**
      * DataSet is a convenience name for a `HashSet` containing `DataPoint`s.
      */
-    public static final class DataSet extends HashSet<DataPoint> {
+    @Deprecated
+    static final class DataSet extends HashSet<DataPoint> {
 
         public DataSet() {
             super();
@@ -35,7 +37,8 @@ public class Import implements Serializable {
         }
     }
 
-    public static final class DataStore extends HashMap<String, DataSet> {
+    @Deprecated
+    static final class DataStore extends HashMap<String, DataSet> {
 
         public DataStore() {
             super();

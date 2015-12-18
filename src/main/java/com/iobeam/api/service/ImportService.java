@@ -63,7 +63,7 @@ public class ImportService {
             }
             List<DataStore> batches = batch.split(REQ_MAX_POINTS / batch.getColumns().size());
             for (DataStore b : batches) {
-                ret.add(new ImportBatch(imp.getProjectId(), imp.getDeviceId(), b, true));
+                ret.add(ImportBatch.createLegacy(imp.getProjectId(), imp.getDeviceId(), b));
             }
         }
 
