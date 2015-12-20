@@ -1,6 +1,7 @@
 package com.iobeam.api.resource;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.Serializable;
@@ -8,6 +9,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -231,10 +233,39 @@ public class DataStore implements Serializable {
         return other != null && this.columns.equals(other.columns);
     }
 
-    // NOTE(robatticus): Not sure this will ever be needed, since batches are only sent TO iobeam,
-    // not received from iobeam.
+    /**
+     * Create a DataStore object from JSON.
+     *
+     * @param json JSON of the DataStore
+     * @return DataStore object corresponding to the given JSON
+     * @throws ParseException If the JSON is invalid
+     */
     public static DataStore fromJson(final JSONObject json) throws ParseException {
-        throw new UnsupportedOperationException();
+        DataStore ret;
+
+        JSONArray jsonCols = json.getJSONArray("fields");
+        if (!"time".equals(jsonCols.get(0))) {
+            throw new JSONException("time must be the first item in 'fields'");
+        }
+
+        Set<String> cols = new HashSet<String>();
+        for (int i = 1; i < jsonCols.length(); i++) {
+            cols.add(jsonCols.getString(i));
+        }
+        ret = new DataStore(cols);
+
+        JSONArray jsonData = json.getJSONArray("data");
+        for (int i = 0; i < jsonData.length(); i++) {
+            JSONArray row = jsonData.getJSONArray(i);
+            Long ts = row.getLong(0);
+            Map<String, Object> vals = new HashMap<String, Object>();
+            for (int j = 1; j < row.length(); j++) {
+                vals.put(jsonCols.getString(j), row.get(j));
+            }
+            ret.rows.put(ts, vals);
+        }
+
+        return ret;
     }
 
     /**

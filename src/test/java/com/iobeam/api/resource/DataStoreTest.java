@@ -60,6 +60,77 @@ public class DataStoreTest {
     }
 
     @Test
+    public void testFromJson() throws Exception {
+        JSONObject obj = new JSONObject();
+        JSONArray fields = new JSONArray();
+        fields.put("time");
+        fields.put("a");
+        fields.put("b");
+        obj.put("fields", fields);
+
+        JSONArray data = new JSONArray();
+        for (int i = 0; i < 3; i++) {
+            JSONArray row = new JSONArray();
+            row.put(i);
+            row.put(i);
+            row.put(i * 10);
+            data.put(row);
+        }
+        obj.put("data", data);
+
+        DataStore ds = DataStore.fromJson(obj);
+        List<String> cols = ds.getColumns();
+        assertEquals(2, cols.size());
+        assertTrue(cols.contains("a"));
+        assertTrue(cols.contains("b"));
+
+        Map<Long, Map<String, Object>> rows = ds.getRows();
+        assertEquals(3, rows.size());
+        long i = 0;
+        for (Long l : rows.keySet()) {
+            assertEquals(i, l.longValue());
+            if (rows.get(l).get("a") instanceof Integer) {
+                assertEquals(i, ((Integer) rows.get(l).get("a")).longValue());
+            } else if (rows.get(l).get("a") instanceof Integer) {
+                assertEquals(i, ((Long) rows.get(l).get("a")).longValue());
+            } else {
+                assertEquals(i, rows.get(l).get("a"));
+            }
+
+            if (rows.get(l).get("b") instanceof Integer) {
+                assertEquals(i * 10, ((Integer) rows.get(l).get("b")).longValue());
+            } else if (rows.get(l).get("b") instanceof Long) {
+                assertEquals(i * 10, ((Long) rows.get(l).get("b")).longValue());
+            } else {
+                assertEquals(i, rows.get(l).get("b"));
+            }
+
+            i++;
+        }
+    }
+
+    @Test(expected=JSONException.class)
+    public void testFromJsonInvalidCols() throws Exception {
+        JSONObject obj = new JSONObject();
+        JSONArray fields = new JSONArray();
+        fields.put("a");
+        fields.put("b");
+        obj.put("fields", fields);
+
+        JSONArray data = new JSONArray();
+        for (int i = 0; i < 3; i++) {
+            JSONArray row = new JSONArray();
+            row.put(i);
+            row.put(i);
+            row.put(i * 10);
+            data.put(row);
+        }
+        obj.put("data", data);
+
+        DataStore.fromJson(obj);
+    }
+
+    @Test
     public void testToJson() throws Exception {
         Set<String> fields = new HashSet<String>();
         fields.add("b");
