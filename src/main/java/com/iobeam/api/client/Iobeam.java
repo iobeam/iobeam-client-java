@@ -728,7 +728,7 @@ public class Iobeam {
         for (DataStore batch : batches) {
             boolean legacy = batch.getColumns().size() == 1 &&
                              seriesToBatch.containsKey(batch.getColumns().get(0));
-            impBatches.add(new ImportBatch(projectId, deviceId, batch, legacy));
+            impBatches.add(ImportBatch.createLegacy(projectId, deviceId, batch));
         }
 
         ImportService service = new ImportService(client);

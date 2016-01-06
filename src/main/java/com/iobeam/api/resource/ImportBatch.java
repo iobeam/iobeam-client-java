@@ -19,11 +19,16 @@ public class ImportBatch implements Serializable {
         this(projectId, deviceId, data, false);
     }
 
-    public ImportBatch(long projectId, String deviceId, DataStore data, boolean legacy) {
+
+    private ImportBatch(long projectId, String deviceId, DataStore data, boolean legacy) {
         this.projectId = projectId;
         this.deviceId = deviceId;
         this.data = data;
         this.legacy = legacy;
+    }
+
+    public static ImportBatch createLegacy(long projectId, String deviceId, DataStore data) {
+        return new ImportBatch(projectId, deviceId, data, true);
     }
 
     public long getProjectId() {
@@ -52,6 +57,10 @@ public class ImportBatch implements Serializable {
         out.put("sources", this.data.toJson());
 
         return ret;
+    }
+
+    public JSONObject toJson(Map<String, Object> out) {
+        return serialize(out);
     }
 
     @Override
