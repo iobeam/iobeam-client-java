@@ -140,6 +140,11 @@ public class DataStoreTest {
         DataStore ds = new DataStore("time_offset", "colA");
     }
 
+    @Test(expected = DataStore.ReservedColumnException.class)
+    public void testReservedColumn3() throws Exception {
+        DataStore ds = new DataStore("colA", "all");
+    }
+
     @Test
     public void testToJson() throws Exception {
         Set<String> fields = new HashSet<String>();

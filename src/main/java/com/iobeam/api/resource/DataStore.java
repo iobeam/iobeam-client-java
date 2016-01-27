@@ -52,6 +52,7 @@ public class DataStore implements Serializable {
     private static final Logger logger = Logger.getLogger(DataStore.class.getName());
     private static final String KEY_COLUMNS = "fields";
     private static final String KEY_ROWS = "data";
+    private static final String[] RESERVED_COLS = {"time", "time_offset", "all"};
 
 
     private final TreeSet<String> columns;
@@ -64,11 +65,10 @@ public class DataStore implements Serializable {
      * @param columns Set of field names to track in this batch.
      */
     public DataStore(Set<String> columns) {
-        if (columns.contains("time")) {
-            throw new ReservedColumnException("time");
-        }
-        if (columns.contains("time_offset")) {
-            throw new ReservedColumnException("time_offset");
+        for (String c : RESERVED_COLS) {
+            if (columns.contains(c)) {
+                throw new ReservedColumnException(c);
+            }
         }
         this.columns = new TreeSet<String>(columns);
     }
@@ -80,11 +80,10 @@ public class DataStore implements Serializable {
      * @param columns List of field names to track in this batch.
      */
     public DataStore(List<String> columns) {
-        if (columns.contains("time")) {
-            throw new ReservedColumnException("time");
-        }
-        if (columns.contains("time_offset")) {
-            throw new ReservedColumnException("time_offset");
+        for (String c : RESERVED_COLS) {
+            if (columns.contains(c)) {
+                throw new ReservedColumnException(c);
+            }
         }
         this.columns = new TreeSet<String>(columns);
         if (columns.size() != this.columns.size()) {
