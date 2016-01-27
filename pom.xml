@@ -4,7 +4,7 @@
 
     <groupId>com.iobeam</groupId>
     <artifactId>iobeam-client-java</artifactId>
-    <version>0.5.4</version>
+    <version>0.5.5</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
     <url>https://www.iobeam.com/</url>
@@ -30,7 +30,7 @@
         <connection>scm:git:git@github.com:iobeam/iobeam-client-java.git</connection>
         <developerConnection>scm:git:git@github.com:iobeam/iobeam-client-java.git</developerConnection>
         <url>git@github.com:iobeam/iobeam-client-java.git</url>
-        <tag>v0.5.4</tag>
+        <tag>v0.5.5</tag>
     </scm>
 
     <properties>
@@ -43,6 +43,7 @@
         <!-- deps versions -->
         <version.json>20151123</version.json>
         <version.junit>4.12</version.junit>
+        <version.mockito>1.10.19</version.mockito>
 
         <!-- plugin versions -->
         <version.maven.failsafe>2.19</version.maven.failsafe>
@@ -202,7 +203,7 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
-            <version>1.9.5</version>
+            <version>${version.mockito}</version>
             <scope>test</scope>
             <optional>true</optional>
         </dependency>
