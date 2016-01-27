@@ -42,6 +42,13 @@ public class DataStore implements Serializable {
         }
     }
 
+    public static final class ReservedColumnException extends IllegalArgumentException {
+
+        public ReservedColumnException(String column) {
+            super("'" + column + "' is a reserved column name.");
+        }
+    }
+
     private static final Logger logger = Logger.getLogger(DataStore.class.getName());
     private static final String KEY_COLUMNS = "fields";
     private static final String KEY_ROWS = "data";
@@ -57,6 +64,12 @@ public class DataStore implements Serializable {
      * @param columns Set of field names to track in this batch.
      */
     public DataStore(Set<String> columns) {
+        if (columns.contains("time")) {
+            throw new ReservedColumnException("time");
+        }
+        if (columns.contains("time_offset")) {
+            throw new ReservedColumnException("time_offset");
+        }
         this.columns = new TreeSet<String>(columns);
     }
 
@@ -67,6 +80,12 @@ public class DataStore implements Serializable {
      * @param columns List of field names to track in this batch.
      */
     public DataStore(List<String> columns) {
+        if (columns.contains("time")) {
+            throw new ReservedColumnException("time");
+        }
+        if (columns.contains("time_offset")) {
+            throw new ReservedColumnException("time_offset");
+        }
         this.columns = new TreeSet<String>(columns);
         if (columns.size() != this.columns.size()) {
             logger.warning("Size mismatch in provided list of columns and resulting set of columns;" +
@@ -301,7 +320,7 @@ public class DataStore implements Serializable {
     public String toString() {
         return "DataStore{" +
                "columns=" + this.columns +
-               "dataSize=" + this.rows.size() + 
+               "dataSize=" + this.rows.size() +
                "}";
     }
 

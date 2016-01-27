@@ -1,5 +1,9 @@
 package com.iobeam.api.resource;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -11,10 +15,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertFalse;
-import static junit.framework.TestCase.assertTrue;
 
 public class DataStoreTest {
 
@@ -128,6 +128,16 @@ public class DataStoreTest {
         obj.put("data", data);
 
         DataStore.fromJson(obj);
+    }
+
+    @Test(expected = DataStore.ReservedColumnException.class)
+    public void testReservedColumn() throws Exception {
+        DataStore ds = new DataStore("time", "colA");
+    }
+
+    @Test(expected = DataStore.ReservedColumnException.class)
+    public void testReservedColumn2() throws Exception {
+        DataStore ds = new DataStore("time_offset", "colA");
     }
 
     @Test
