@@ -47,16 +47,26 @@ public class ImportBatch implements Serializable {
         return this.legacy;
     }
 
-    public JSONObject serialize(Map<String, Object> out) {
+    public JSONObject serialize() {
         JSONObject ret = new JSONObject();
         ret.put("project_id", this.projectId);
-        out.put("project_id", this.projectId);
         ret.put("device_id", this.deviceId);
-        out.put("device_id", this.deviceId);
         ret.put("sources", this.data.toJson());
-        out.put("sources", this.data.toJson());
 
         return ret;
+    }
+
+    @Deprecated
+    public JSONObject serialize(Map<String, Object> out) {
+        out.put("project_id", this.projectId);
+        out.put("device_id", this.deviceId);
+        out.put("sources", this.data.toJson());
+
+        return serialize();
+    }
+
+    public JSONObject toJson() {
+        return serialize();
     }
 
     public JSONObject toJson(Map<String, Object> out) {
