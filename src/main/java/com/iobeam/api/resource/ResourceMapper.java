@@ -62,18 +62,16 @@ public class ResourceMapper {
 
     // Recursively serialize bean. Code partly based on wrap() function
     // org.json.JSONObject
-    private Object beanSerialize(final Object resource,
-                                 final Map<String, Object> out) {
+    JSONObject beanSerialize(final Object resource,
+                             final Map<String, Object> out) {
         final Class clazz = resource.getClass();
         final Method[] methods = clazz.getDeclaredMethods();
         final JSONObject json = new JSONObject();
 
         if (clazz.equals(Import.class)) {
-            ((Import) resource).serialize(out);
-            return json;
+            return ((Import) resource).serialize(out);
         } else if (clazz.equals(ImportBatch.class)) {
-            ((ImportBatch) resource).serialize(out);
-            return json;
+            return ((ImportBatch) resource).toJson();
         }
 
         for (final Method m : methods) {
@@ -146,6 +144,7 @@ public class ResourceMapper {
                                 }
                                 if (result != null) {
                                     out.put(key, result);
+                                    json.put(key, result);
                                 }
                             } catch (Exception exception) {
                                 return null;
@@ -172,7 +171,11 @@ public class ResourceMapper {
         }
 
         final HashMap<String, Object> out = new HashMap<String, Object>();
-        beanSerialize(resource, out);
-        return new JSONObject(out).toString().getBytes("UTF-8");
+        final JSONObject res = beanSerialize(resource, out);
+        if (res == null || res.length() == 0) {
+            return new JSONObject(out).toString().getBytes("UTF-8");
+        } else {
+            return res.toString().getBytes("UTF-8");
+        }
     }
 }
