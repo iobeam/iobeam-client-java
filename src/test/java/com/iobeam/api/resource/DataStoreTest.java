@@ -133,16 +133,19 @@ public class DataStoreTest {
     @Test(expected = DataStore.ReservedColumnException.class)
     public void testReservedColumn() throws Exception {
         DataStore ds = new DataStore("time", "colA");
+        ds.clear();
     }
 
     @Test(expected = DataStore.ReservedColumnException.class)
     public void testReservedColumn2() throws Exception {
         DataStore ds = new DataStore("time_offset", "colA");
+        ds.clear();
     }
 
     @Test(expected = DataStore.ReservedColumnException.class)
     public void testReservedColumn3() throws Exception {
         DataStore ds = new DataStore("colA", "all");
+        ds.clear();
     }
 
     @Test
@@ -172,7 +175,7 @@ public class DataStoreTest {
         assertEquals(1 + fields.size(), jsonFields.length());
         assertEquals("time", jsonFields.get(0));
         for (int i = 0; i < fields.size(); i++) {
-            assertTrue(fields.contains(jsonFields.get(i + 1)));
+            assertTrue(fields.contains(jsonFields.getString(i + 1)));
         }
 
         assertTrue(json.has("data"));
@@ -208,7 +211,7 @@ public class DataStoreTest {
 
     @Test
     public void testDataSize() throws Exception {
-        DataStore b = new DataStore(new String[]{"a", "b", "c"});
+        DataStore b = new DataStore("a", "b", "c");
         assertEquals(0, b.getDataSize());
         b.add(0, new String[]{"a", "b", "c"}, new Object[]{1, 2, 3});
         assertEquals(3, b.getDataSize());
@@ -220,27 +223,27 @@ public class DataStoreTest {
 
     @Test
     public void testHasSameColumns() throws Exception {
-        DataStore b1 = new DataStore(new String[]{"a", "b", "c"});
+        DataStore b1 = new DataStore("a", "b", "c");
         assertTrue(b1.hasSameColumns(b1));
         assertFalse(b1.hasSameColumns(null));
 
-        DataStore b2 = new DataStore(new String[]{"a", "c"});
+        DataStore b2 = new DataStore("a", "c");
         assertFalse(b1.hasSameColumns(b2));
         assertFalse(b2.hasSameColumns(b1));
 
-        DataStore b3 = new DataStore(new String[]{"a", "c", "b"});
+        DataStore b3 = new DataStore("a", "c", "b");
         assertTrue(b1.hasSameColumns(b3));
         assertTrue(b3.hasSameColumns(b1));
     }
 
     @Test
     public void testMerge() throws Exception {
-        DataStore b1 = new DataStore(new String[]{"a"});
+        DataStore b1 = new DataStore("a");
         b1.add(1, new String[]{"a"}, new Object[]{1});
         b1.add(2, new String[]{"a"}, new Object[]{2});
         b1.add(3, new String[]{"a"}, new Object[]{3});
 
-        DataStore b2 = new DataStore(new String[]{"a"});
+        DataStore b2 = new DataStore("a");
         b2.add(4, new String[]{"a"}, new Object[]{4});
         b2.add(5, new String[]{"a"}, new Object[]{5});
         b2.add(6, new String[]{"a"}, new Object[]{6});
@@ -248,7 +251,7 @@ public class DataStoreTest {
         b1.merge(b2);
         assertEquals(6, b1.getDataSize());
 
-        DataStore wrong = new DataStore(new String[]{"b"});
+        DataStore wrong = new DataStore("b");
         wrong.add(7, new String[]{"b"}, new Object[]{7});
         try {
             b1.merge(wrong);
@@ -260,9 +263,9 @@ public class DataStoreTest {
 
     @Test
     public void testMergeWrong() throws Exception {
-        DataStore b1 = new DataStore(new String[]{"a"});
+        DataStore b1 = new DataStore("a");
 
-        DataStore wrong = new DataStore(new String[]{"b"});
+        DataStore wrong = new DataStore("b");
         wrong.add(7, new String[]{"b"}, new Object[]{7});
         try {
             b1.merge(wrong);
@@ -271,7 +274,7 @@ public class DataStoreTest {
             // do nothing
         }
 
-        wrong = new DataStore(new String[]{"a", "b"});
+        wrong = new DataStore("a", "b");
         wrong.add(7, new String[]{"a"}, new Object[]{7});
         try {
             b1.merge(wrong);
