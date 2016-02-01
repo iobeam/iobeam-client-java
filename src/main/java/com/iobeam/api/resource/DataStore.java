@@ -65,8 +65,8 @@ public class DataStore implements Serializable {
      * @param columns Set of field names to track in this batch.
      */
     public DataStore(Set<String> columns) {
-        for (String c : RESERVED_COLS) {
-            if (columns.contains(c)) {
+        for (String c : columns) {
+            if (Arrays.asList(RESERVED_COLS).contains(c.toLowerCase())) {
                 throw new ReservedColumnException(c);
             }
         }
@@ -80,8 +80,8 @@ public class DataStore implements Serializable {
      * @param columns List of field names to track in this batch.
      */
     public DataStore(List<String> columns) {
-        for (String c : RESERVED_COLS) {
-            if (columns.contains(c)) {
+        for (String c : columns) {
+            if (Arrays.asList(RESERVED_COLS).contains(c.toLowerCase())) {
                 throw new ReservedColumnException(c);
             }
         }

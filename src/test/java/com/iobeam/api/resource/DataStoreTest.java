@@ -148,6 +148,23 @@ public class DataStoreTest {
         ds.clear();
     }
 
+    @Test(expected = DataStore.ReservedColumnException.class)
+    public void testReservedColumn4() throws Exception {
+        Set<String> cols = new HashSet<String>();
+        cols.add("AlL");
+        cols.add("colB");
+        DataStore ds = new DataStore(cols);
+        ds.clear();
+    }
+
+    @Test(expected = DataStore.ReservedColumnException.class)
+    public void testReservedColumnDifferentCase() throws Exception {
+        DataStore ds = new DataStore("tIMe", "colA");
+        ds.clear();
+    }
+
+
+
     @Test
     public void testToJson() throws Exception {
         Set<String> fields = new HashSet<String>();
