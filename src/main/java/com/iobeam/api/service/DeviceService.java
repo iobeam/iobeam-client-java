@@ -73,6 +73,7 @@ public class DeviceService {
         return new GetDevice(deviceId);
     }
 
+    @Deprecated
     public GetDevice get(final Device.Id deviceId) {
         return get(deviceId.getId());
     }
@@ -138,6 +139,7 @@ public class DeviceService {
         return new Delete(deviceId);
     }
 
+    @Deprecated
     public Delete delete(Device.Id deviceId) {
         return delete(deviceId.getId());
     }

@@ -17,6 +17,7 @@ public class Device implements Serializable {
     /**
      * A wrapper class around a String that uniquely identifies the device.
      */
+    @Deprecated
     public static final class Id implements Serializable {
 
         private final String id;
