@@ -77,12 +77,12 @@ public class DeviceService {
         return get(deviceId.getId());
     }
 
-    public final class Add extends RestRequest<Device.Id> {
+    public final class Add extends RestRequest<Device> {
 
         protected Add(Device request) {
             super(client, RequestMethod.POST, PATH,
                   ContentType.JSON, request,
-                  StatusCode.CREATED, Device.Id.class);
+                  StatusCode.CREATED, Device.class);
         }
     }
 
@@ -101,7 +101,6 @@ public class DeviceService {
     @Deprecated
     public Add add(long projectId, String deviceId, String deviceName, String deviceType,
                    Date created) {
-
         return add(projectId, new Device.Spec(deviceId, deviceName, deviceType), created);
     }
 
@@ -109,6 +108,14 @@ public class DeviceService {
         Date date = created == null ? new Date(System.currentTimeMillis()) : created;
         Device req = new Device(projectId, spec, date);
         return new Add(req);
+    }
+
+    public Add add(long projectId, Device.Spec spec) {
+        return add(projectId, spec, null);
+    }
+
+    public Add add(long projectId) {
+        return add(projectId, null, null);
     }
 
 

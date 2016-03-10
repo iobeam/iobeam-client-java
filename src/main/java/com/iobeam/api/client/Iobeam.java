@@ -454,7 +454,7 @@ public class Iobeam {
      */
     public void registerDeviceWithIdAsync(String deviceId, String deviceName,
                                           RegisterCallback callback) throws ApiException {
-        RestCallback<Device.Id> cb;
+        RestCallback<Device> cb;
         if (callback == null) {
             cb = RegisterCallback.getEmptyCallback().getInnerCallback(this);
         } else {
@@ -464,7 +464,7 @@ public class Iobeam {
         // If device ID is set and not explicitly asking for a different one, return current ID.
         boolean alreadySet = this.deviceId != null;
         if (alreadySet && (deviceId == null || this.deviceId.equals(deviceId))) {
-            cb.completed(new Device.Id(this.deviceId), null);
+            cb.completed(new Device(this.deviceId, this.projectId, null, null, null), null);
             return;
         }
 
