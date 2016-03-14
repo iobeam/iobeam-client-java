@@ -7,6 +7,7 @@ import org.json.JSONObject;
 
 import java.io.Serializable;
 import java.text.ParseException;
+import java.util.Calendar;
 import java.util.Date;
 
 /**
@@ -132,12 +133,23 @@ public class Device implements Serializable {
         throws ParseException {
 
         final long projectId = json.getLong("project_id");
+        Date created;
+        final String dateStr = json.getString("created");
+        try {
+            created = Util.DATE_FORMAT.parse(dateStr);
+        } catch (ParseException e) {
+            try {
+                final Calendar c = javax.xml.bind.DatatypeConverter.parseDateTime(dateStr);
+                created = c.getTime();
+            } catch (IllegalArgumentException e2) {
+                created = null;
+            }
+        }
         final Builder builder = new Builder(projectId).
             setId(json.getString("device_id")).
             setName(json.optString("device_name", null)).
-            setType(json.optString("device_type", null));
-        // TODO(rrk) - Fix the backend inconsistency first.
-        //Date created = Util.RESOURCE_DATE_FORMAT.parse(json.getString("created"));
+            setType(json.optString("device_type", null)).
+            setCreated(created);
 
         return builder.build();
     }
@@ -159,6 +171,7 @@ public class Device implements Serializable {
         private String deviceId;
         private String deviceName;
         private String deviceType;
+        public Date created;
 
         public Builder(final long projectId) {
             this.projectId = projectId;
@@ -179,8 +192,13 @@ public class Device implements Serializable {
             return this;
         }
 
+        public Builder setCreated(final Date created) {
+            this.created = created;
+            return this;
+        }
+
         public Device build() {
-            return new Device(projectId, new Spec(deviceId, deviceName, deviceType), null);
+            return new Device(projectId, new Spec(deviceId, deviceName, deviceType), created);
         }
     }
 }
