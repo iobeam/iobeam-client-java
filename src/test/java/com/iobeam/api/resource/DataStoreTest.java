@@ -163,7 +163,17 @@ public class DataStoreTest {
         ds.clear();
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testNullColumn() throws Exception {
+        DataStore ds = new DataStore("good", null);
+        ds.clear();
+    }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testEmptyColumn() throws Exception {
+        DataStore ds = new DataStore("good", "");
+        ds.clear();
+    }
 
     @Test
     public void testToJson() throws Exception {
