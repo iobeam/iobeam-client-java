@@ -22,7 +22,7 @@ public class Util {
                 final Calendar c = javax.xml.bind.DatatypeConverter.parseDateTime(dateStr);
                 created = c.getTime();
             } catch (IllegalArgumentException e2) {
-                created = null;
+                throw e;
             }
         }
         return created;

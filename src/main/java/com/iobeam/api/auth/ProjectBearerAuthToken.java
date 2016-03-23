@@ -46,10 +46,9 @@ public class ProjectBearerAuthToken extends AuthToken {
     }
 
     public static ProjectBearerAuthToken fromJson(final JSONObject json) throws ParseException {
-        Date expires = Util.DATE_FORMAT.parse(json.getString("expires"));
         return new ProjectBearerAuthToken(json.getLong("project_id"),
                                           json.getString("token"),
-                                          expires);
+                                          Util.parseToDate(json.getString("expires")));
     }
 
     @Override
