@@ -7,7 +7,6 @@ import org.json.JSONObject;
 
 import java.io.Serializable;
 import java.text.ParseException;
-import java.util.Calendar;
 import java.util.Date;
 
 /**
@@ -129,22 +128,10 @@ public class Device implements Serializable {
         return created;
     }
 
-    public static Device fromJson(final JSONObject json)
-        throws ParseException {
+    public static Device fromJson(final JSONObject json) throws ParseException {
 
         final long projectId = json.getLong("project_id");
-        Date created;
-        final String dateStr = json.getString("created");
-        try {
-            created = Util.DATE_FORMAT.parse(dateStr);
-        } catch (ParseException e) {
-            try {
-                final Calendar c = javax.xml.bind.DatatypeConverter.parseDateTime(dateStr);
-                created = c.getTime();
-            } catch (IllegalArgumentException e2) {
-                created = null;
-            }
-        }
+        final Date created = Util.parseToDate(json.getString("created"));
         final Builder builder = new Builder(projectId).
             setId(json.getString("device_id")).
             setName(json.optString("device_name", null)).

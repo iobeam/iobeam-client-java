@@ -17,13 +17,22 @@ public class DeviceTest {
     private static final String DEVICE_NAME = "java_test_ex";
     private static final String DEVICE_TYPE = "java_test";
     private static final String TEST_DATE_STRING = "2015-03-01 20:55:21 -0400";
+    private static final String TEST_DATE_STRING_8601 = "2015-03-01T20:55:21-04:00";
+
+    private static final String jsonOldDevice = "{\n"
+                                             + "     \"device_id\": \"" + DEVICE_ID + "\",\n"
+                                             + "     \"project_id\": 1000,\n"
+                                             + "     \"device_name\": \"" + DEVICE_NAME + "\",\n"
+                                             + "     \"device_type\": \"java_test\",\n"
+                                             + "     \"created\": \"" + TEST_DATE_STRING + "\"\n"
+                                             + "}";
 
     private static final String jsonDevice = "{\n"
                                              + "     \"device_id\": \"" + DEVICE_ID + "\",\n"
                                              + "     \"project_id\": 1000,\n"
                                              + "     \"device_name\": \"" + DEVICE_NAME + "\",\n"
                                              + "     \"device_type\": \"java_test\",\n"
-                                             + "     \"created\": \"" + TEST_DATE_STRING + "\"\n"
+                                             + "     \"created\": \"" + TEST_DATE_STRING_8601 + "\"\n"
                                              + "}";
 
     @Test
@@ -34,9 +43,22 @@ public class DeviceTest {
         assertEquals(1000, d.getProjectId());
         assertEquals(DEVICE_NAME, d.getName());
         assertEquals(DEVICE_TYPE, d.getType());
-        //TODO(rrk): Fix date inconsistencies
-        //Date expected = Util.DATE_FORMAT.parse(TEST_DATE_STRING);
-        //assertEquals(expected, d.getCreated());
+
+        Date expected = Util.parseToDate(TEST_DATE_STRING_8601);
+        assertEquals(expected, d.getCreated());
+    }
+
+    @Test
+    public void testFromJsonOld() throws Exception {
+        Device d = Device.fromJson(new JSONObject(jsonOldDevice));
+        assertNotNull(d);
+        assertEquals(DEVICE_ID, d.getId());
+        assertEquals(1000, d.getProjectId());
+        assertEquals(DEVICE_NAME, d.getName());
+        assertEquals(DEVICE_TYPE, d.getType());
+
+        Date expected = Util.parseToDate(TEST_DATE_STRING);
+        assertEquals(expected, d.getCreated());
     }
 
     private void verifyJson(JSONObject json, long pid, Date date) throws Exception {
@@ -51,7 +73,7 @@ public class DeviceTest {
     @Test
     public void testSerialization() throws Exception {
         ResourceMapper mapper = new ResourceMapper();
-        Date date = Util.DATE_FORMAT.parse(TEST_DATE_STRING);
+        Date date = Util.parseToDate(TEST_DATE_STRING_8601);
         Device d = new Device(1000, new Device.Spec(DEVICE_ID, DEVICE_NAME, DEVICE_TYPE), date);
         byte[] raw = mapper.toJsonBytes(d);
         assertTrue(raw.length > 0);
