@@ -4,13 +4,13 @@ import com.iobeam.api.ApiException;
 import com.iobeam.api.client.RestClient;
 import com.iobeam.api.resource.util.Util;
 import com.iobeam.api.service.TokenService;
+import com.iobeam.util.Base64Shim;
 
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.Base64;
 import java.util.Date;
 
 /**
@@ -20,8 +20,8 @@ public class DefaultAuthHandler extends AbstractAuthHandler {
 
     private static final String FMT_DEFAULT_PATH = "project_%d.authtoken";
 
-    private static Base64.Decoder legacy = Base64.getDecoder();
-    private static Base64.Decoder current = Base64.getUrlDecoder();
+    private static Base64Shim.Decoder legacy = Base64Shim.getDecoder();
+    private static Base64Shim.Decoder current = Base64Shim.getUrlDecoder();
 
     public static ProjectBearerAuthToken parseStringToProjectToken(String t) {
         if (t == null) {
