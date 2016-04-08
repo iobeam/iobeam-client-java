@@ -3,8 +3,8 @@ package com.iobeam.api.client;
 import com.iobeam.api.ApiException;
 import com.iobeam.api.auth.AuthHandler;
 import com.iobeam.api.auth.DefaultAuthHandler;
-import com.iobeam.api.resource.DataStore;
 import com.iobeam.api.resource.DataPoint;
+import com.iobeam.api.resource.DataStore;
 import com.iobeam.api.resource.Device;
 import com.iobeam.api.resource.Import;
 import com.iobeam.api.resource.ImportBatch;
@@ -18,11 +18,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
@@ -510,11 +510,12 @@ public class Iobeam {
 
         DataStore batch = seriesToBatch.get(seriesName);
         if (batch == null) {
-            batch = new DataStore(new String[]{seriesName});
+            batch = new DataStore(seriesName);
             seriesToBatch.put(seriesName, batch);
             dataBatches.add(batch);
         }
-        batch.add(dataPoint.getTime(), new String[]{seriesName}, new Object[]{dataPoint.getValue()});
+        batch
+            .add(dataPoint.getTime(), new String[]{seriesName}, new Object[]{dataPoint.getValue()});
     }
 
     /**
@@ -582,13 +583,13 @@ public class Iobeam {
     }
 
     /**
-     * Creates a DataStore with a given set of columns, and tracks it so that
-     * any data added will be sent on a subsequent send calls.
+     * Creates a DataStore with a given set of columns, and tracks it so that any data added will be
+     * sent on a subsequent send calls.
      *
      * @param columns Columns in the DataStore
      * @return DataStore for storing data for a given set of columns.
      */
-    public DataStore createDataStore(Set<String> columns) {
+    public DataStore createDataStore(Collection<String> columns) {
         DataStore b = new DataStore(columns);
         trackDataStore(b);
 
@@ -596,22 +597,8 @@ public class Iobeam {
     }
 
     /**
-     * Creates a DataStore with a given set of columns, and tracks it so that
-     * any data added will be sent on a subsequent send calls.
-     *
-     * @param columns Columns in the DataStore
-     * @return DataStore for storing data for a given set of columns.
-     */
-    public DataStore createDataStore(List<String> columns) {
-        DataStore b = new DataStore(columns);
-        trackDataStore(b);
-
-        return b;
-    }
-
-    /**
-     * Creates a DataStore with a given set of columns, and tracks it so that
-     * any data added will be sent on a subsequent send calls.
+     * Creates a DataStore with a given set of columns, and tracks it so that any data added will be
+     * sent on a subsequent send calls.
      *
      * @param columns Columns in the DataStore
      * @return DataStore for storing data for a given set of columns.
@@ -621,8 +608,7 @@ public class Iobeam {
     }
 
     /**
-     * Track a DataStore so that any data stored in it will be sent on subsequent
-     * send calls.
+     * Track a DataStore so that any data stored in it will be sent on subsequent send calls.
      *
      * @param batch Data stored in a batch/table format.
      */
@@ -665,6 +651,7 @@ public class Iobeam {
 
     /**
      * Returns the size of the data set in a particular series.
+     *
      * @param series The series to query
      * @return Size of the data set, or 0 if series does not exist.
      * @deprecated Use batch methods instead.

@@ -22,8 +22,8 @@ import java.util.logging.Logger;
  * Represents a batch of data streams in column format. That is, columns are names for
  * series/streams, and each row is a timestamp plus values for (some of) the series/streams.
  *
- * When converted to JSON, a "time" column is prepended to the other columns which are listed
- * in alphabetical order. Rows are represented as a list with the first value being the timestamp,
+ * When converted to JSON, a "time" column is prepended to the other columns which are listed in
+ * alphabetical order. Rows are represented as a list with the first value being the timestamp,
  * followed by corresponding values for each column. If a row does not have a value for a column,
  * then it is filled in with null.
  */
@@ -57,11 +57,13 @@ public class DataStore implements Serializable {
 
 
     private final TreeSet<String> columns;
-    private final TreeMap<Long, Map<String, Object>> rows = new TreeMap<Long, Map<String, Object>>();
+    private final TreeMap<Long, Map<String, Object>>
+        rows =
+        new TreeMap<Long, Map<String, Object>>();
 
     /**
-     * Constructs a DataStore, using a collection to construct a _set_ of columns.
-     * Note: Duplicates will be removed and a warning will be logged.
+     * Constructs a DataStore, using a collection to construct a _set_ of columns. Note: Duplicates
+     * will be removed and a warning will be logged.
      *
      * @param columns Set of field names to track in this batch.
      */
@@ -89,19 +91,18 @@ public class DataStore implements Serializable {
         }
     }
 
-
     /**
      * Add a data row to the batch at a particular timestamp.
      *
-     * This method will throw a `MismatchedLengthException` if the length of `columns` and
-     * `values` are not the same.
+     * This method will throw a `MismatchedLengthException` if the length of `columns` and `values`
+     * are not the same.
      *
-     * This method will throw an `UnknownFieldException` if `data` contains a key that is
-     * not in the set of columns this batch was constructed with.
+     * This method will throw an `UnknownFieldException` if `data` contains a key that is not in the
+     * set of columns this batch was constructed with.
      *
      * @param timestamp Timestamp for all data points
-     * @param columns The list of columns for a field to value mapping
-     * @param values The list of values for a field to value mapping
+     * @param columns   The list of columns for a field to value mapping
+     * @param values    The list of values for a field to value mapping
      */
     public void add(long timestamp, String[] columns, Object[] values) {
         add(timestamp, Arrays.asList(columns), Arrays.asList(values));
@@ -110,14 +111,14 @@ public class DataStore implements Serializable {
     /**
      * Add a data row to the batch with the current time.
      *
-     * This method will throw a `MismatchedLengthException` if the length of `columns` and
-     * `values` are not the same.
+     * This method will throw a `MismatchedLengthException` if the length of `columns` and `values`
+     * are not the same.
      *
-     * This method will throw an `UnknownFieldException` if `data` contains a key that is
-     * not in the set of columns this batch was constructed with.
+     * This method will throw an `UnknownFieldException` if `data` contains a key that is not in the
+     * set of columns this batch was constructed with.
      *
      * @param columns The list of columns for a field to value mapping
-     * @param values The list of values for a field to value mapping
+     * @param values  The list of values for a field to value mapping
      */
     public void add(String[] columns, Object[] values) {
         add(System.currentTimeMillis(), columns, values);
@@ -126,15 +127,15 @@ public class DataStore implements Serializable {
     /**
      * Add a data row to the batch at a particular timestamp.
      *
-     * This method will throw a `MismatchedLengthException` if the size of `columns` and
-     * `values` are not the same.
+     * This method will throw a `MismatchedLengthException` if the size of `columns` and `values`
+     * are not the same.
      *
-     * This method will throw an `UnknownFieldException` if `data` contains a key that is
-     * not in the set of columns this batch was constructed with.
+     * This method will throw an `UnknownFieldException` if `data` contains a key that is not in the
+     * set of columns this batch was constructed with.
      *
      * @param timestamp Timestamp for all data points
-     * @param columns The list of columns for a field to value mapping
-     * @param values The list of values for a field to value mapping
+     * @param columns   The list of columns for a field to value mapping
+     * @param values    The list of values for a field to value mapping
      */
     public void add(long timestamp, List<String> columns, List<Object> values) {
         if (columns.size() != values.size()) {
@@ -150,14 +151,14 @@ public class DataStore implements Serializable {
     /**
      * Add a data row to the batch with the current time.
      *
-     * This method will throw a `MismatchedLengthException` if the size of `columns` and
-     * `values` are not the same.
+     * This method will throw a `MismatchedLengthException` if the size of `columns` and `values`
+     * are not the same.
      *
-     * This method will throw an `UnknownFieldException` if `data` contains a key that is
-     * not in the set of columns this batch was constructed with.
+     * This method will throw an `UnknownFieldException` if `data` contains a key that is not in the
+     * set of columns this batch was constructed with.
      *
      * @param columns The list of columns for a field to value mapping
-     * @param values The list of values for a field to value mapping
+     * @param values  The list of values for a field to value mapping
      */
     public void add(List<String> columns, List<Object> values) {
         add(System.currentTimeMillis(), columns, values);
@@ -166,11 +167,11 @@ public class DataStore implements Serializable {
     /**
      * Add a data row to the batch at a particular timestamp.
      *
-     * This method will throw an `UnknownFieldException` if `data` contains a key that is
-     * not in the set of columns this batch was constructed with.
+     * This method will throw an `UnknownFieldException` if `data` contains a key that is not in the
+     * set of columns this batch was constructed with.
      *
      * @param timestamp Timestamp for all data points
-     * @param data Map that has field names as keys and the data value as values.
+     * @param data      Map that has field names as keys and the data value as values.
      */
     public void add(long timestamp, Map<String, Object> data) {
         for (String k : data.keySet()) {
@@ -184,8 +185,8 @@ public class DataStore implements Serializable {
     /**
      * Add a data row to the batch with the current time.
      *
-     * This method will throw an `UnknownFieldException` if `data` contains a key that is
-     * not in the set of columns this batch was constructed with.
+     * This method will throw an `UnknownFieldException` if `data` contains a key that is not in the
+     * set of columns this batch was constructed with.
      *
      * @param data Map that has field names as keys and the data value as values.
      */
@@ -225,9 +226,8 @@ public class DataStore implements Serializable {
     }
 
     /**
-     * The number of data values currently stored in this batch, i.e., the product
-     * of the number of rows times the number of columns. (Empty data values are
-     * counted).
+     * The number of data values currently stored in this batch, i.e., the product of the number of
+     * rows times the number of columns. (Empty data values are counted).
      *
      * @return Size of this DataStore
      */
