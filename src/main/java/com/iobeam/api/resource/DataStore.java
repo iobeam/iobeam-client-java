@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -59,42 +60,35 @@ public class DataStore implements Serializable {
     private final TreeMap<Long, Map<String, Object>> rows = new TreeMap<Long, Map<String, Object>>();
 
     /**
-     * Constructs a DataStore, using the list to construct a _set_ of columns.
+     * Constructs a DataStore, using a collection to construct a _set_ of columns.
      * Note: Duplicates will be removed and a warning will be logged.
      *
      * @param columns Set of field names to track in this batch.
      */
-    public DataStore(Set<String> columns) {
-        for (String c : RESERVED_COLS) {
-            if (columns.contains(c)) {
-                throw new ReservedColumnException(c);
-            }
-        }
-        this.columns = new TreeSet<String>(columns);
-    }
-
-    /**
-     * Constructs a DataStore, using the list to construct a _set_ of columns.
-     * Note: Duplicates will be removed and a warning will be logged.
-     *
-     * @param columns List of field names to track in this batch.
-     */
-    public DataStore(List<String> columns) {
-        for (String c : RESERVED_COLS) {
-            if (columns.contains(c)) {
-                throw new ReservedColumnException(c);
-            }
-        }
+    public DataStore(Collection<String> columns) {
+        checkColumns(columns);
         this.columns = new TreeSet<String>(columns);
         if (columns.size() != this.columns.size()) {
-            logger.warning("Size mismatch in provided list of columns and resulting set of columns;" +
-                           " list may have contained duplicates.");
+            logger.warning("Size mismatch in provided list of columns and resulting set of " +
+                           "columns; list may have contained duplicates.");
         }
     }
 
     public DataStore(String... columns) {
         this(Arrays.asList(columns));
     }
+
+    private void checkColumns(Collection<String> columns) {
+        for (String c : columns) {
+            if (c == null || c.isEmpty()) {
+                throw new IllegalArgumentException("Column cannot be null or empty string.");
+            }
+            if (Arrays.asList(RESERVED_COLS).contains(c.toLowerCase())) {
+                throw new ReservedColumnException(c);
+            }
+        }
+    }
+
 
     /**
      * Add a data row to the batch at a particular timestamp.

@@ -17,6 +17,7 @@ public class Device implements Serializable {
     /**
      * A wrapper class around a String that uniquely identifies the device.
      */
+    @Deprecated
     public static final class Id implements Serializable {
 
         private final String id;
@@ -69,7 +70,6 @@ public class Device implements Serializable {
     private final Spec spec;
     private final Date created;
 
-    // Should use Device.Spec for forward compatibility/flexibility. Will remove in 0.6.0
     // TODO(robatticus) Remove in 0.6.0
     @Deprecated
     public Device(String id,
@@ -80,7 +80,6 @@ public class Device implements Serializable {
         this(projectId, new Device.Spec(id, name, type), created);
     }
 
-    // Should use Device.Spec for forward compatibility/flexibility. Will remove in 0.6.0
     // TODO(robatticus) Remove in 0.6.0
     @Deprecated
     public Device(Id id,
@@ -95,6 +94,10 @@ public class Device implements Serializable {
         this.projectId = projectId;
         this.spec = spec;
         this.created = created;
+    }
+
+    public Device(long projectId, Device.Spec spec) {
+        this(projectId, spec, null);
     }
 
     public Device(Device d) {
@@ -125,15 +128,17 @@ public class Device implements Serializable {
         return created;
     }
 
-    public static Device fromJson(final JSONObject json)
-        throws ParseException {
-        String id = json.getString("device_id");
-        long projectId = json.getLong("project_id");
-        String name = json.optString("device_name");
-        String type = json.optString("device_type");
-        Date created = Util.DATE_FORMAT.parse(json.getString("created"));
-        Spec spec = new Spec(id, name, type);
-        return new Device(projectId, spec, created);
+    public static Device fromJson(final JSONObject json) throws ParseException {
+
+        final long projectId = json.getLong("project_id");
+        final Date created = Util.parseToDate(json.getString("created"));
+        final Builder builder = new Builder(projectId).
+            setId(json.getString("device_id")).
+            setName(json.optString("device_name", null)).
+            setType(json.optString("device_type", null)).
+            setCreated(created);
+
+        return builder.build();
     }
 
     @Override
@@ -145,5 +150,42 @@ public class Device implements Serializable {
                ", type='" + spec.type + "'" +
                ", created=" + (created != null ? Util.DATE_FORMAT.format(created) : null) +
                '}';
+    }
+
+    public static class Builder {
+
+        private final long projectId;
+        private String deviceId;
+        private String deviceName;
+        private String deviceType;
+        public Date created;
+
+        public Builder(final long projectId) {
+            this.projectId = projectId;
+        }
+
+        public Builder setId(final String id) {
+            this.deviceId = id;
+            return this;
+        }
+
+        public Builder setName(final String name) {
+            this.deviceName = name;
+            return this;
+        }
+
+        public Builder setType(final String type) {
+            this.deviceType = type;
+            return this;
+        }
+
+        public Builder setCreated(final Date created) {
+            this.created = created;
+            return this;
+        }
+
+        public Device build() {
+            return new Device(projectId, new Spec(deviceId, deviceName, deviceType), created);
+        }
     }
 }

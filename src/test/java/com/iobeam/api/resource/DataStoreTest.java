@@ -148,6 +148,33 @@ public class DataStoreTest {
         ds.clear();
     }
 
+    @Test(expected = DataStore.ReservedColumnException.class)
+    public void testReservedColumn4() throws Exception {
+        Set<String> cols = new HashSet<String>();
+        cols.add("AlL");
+        cols.add("colB");
+        DataStore ds = new DataStore(cols);
+        ds.clear();
+    }
+
+    @Test(expected = DataStore.ReservedColumnException.class)
+    public void testReservedColumnDifferentCase() throws Exception {
+        DataStore ds = new DataStore("tIMe", "colA");
+        ds.clear();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testNullColumn() throws Exception {
+        DataStore ds = new DataStore("good", null);
+        ds.clear();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testEmptyColumn() throws Exception {
+        DataStore ds = new DataStore("good", "");
+        ds.clear();
+    }
+
     @Test
     public void testToJson() throws Exception {
         Set<String> fields = new HashSet<String>();
