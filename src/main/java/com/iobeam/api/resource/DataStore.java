@@ -57,8 +57,7 @@ public class DataStore implements Serializable {
 
 
     private final TreeSet<String> columns;
-    private final TreeMap<Long, Map<String, Object>>
-        rows =
+    private final TreeMap<Long, Map<String, Object>> rows =
         new TreeMap<Long, Map<String, Object>>();
 
     /**
@@ -89,6 +88,29 @@ public class DataStore implements Serializable {
                 throw new ReservedColumnException(c);
             }
         }
+    }
+
+    /**
+     * Add a data row, consisting of one column, to the store at a particular time.
+     *
+     * @param timestamp Timestamp for the data point.
+     * @param column    The column for a field to value mapping
+     * @param value     The value for a field to value mapping
+     */
+    public void add(long timestamp, String column, Object value) {
+        Map<String, Object> temp = new HashMap<String, Object>();
+        temp.put(column, value);
+        add(timestamp, temp);
+    }
+
+    /**
+     * Add a data row, consisting of one column, to the store at the current time.
+     *
+     * @param column    The column for a field to value mapping
+     * @param value     The value for a field to value mapping
+     */
+    public void add(String column, Object value) {
+        add(System.currentTimeMillis(), column, value);
     }
 
     /**

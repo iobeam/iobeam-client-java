@@ -1,21 +1,25 @@
 package com.iobeam.api.client;
 
-import com.iobeam.api.resource.DataPoint;
-import com.iobeam.api.resource.Import;
-
-import org.junit.Test;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.util.Set;
-
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertNotEquals;
+
+import com.iobeam.api.resource.DataPoint;
+import com.iobeam.api.resource.DataStore;
+import com.iobeam.api.resource.Import;
+import com.iobeam.api.resource.ImportBatch;
+import com.iobeam.api.service.ImportService;
+
+import org.junit.Test;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.util.List;
+import java.util.Set;
 
 public class IobeamTest {
 
@@ -409,5 +413,32 @@ public class IobeamTest {
         iobeam.send();
         iobeam.send();
         assertTrue(true);
+    }
+
+    @Test
+    public void testPrepareDataRequests() throws Exception {
+        final Iobeam iobeam = getBuilder().setDeviceId(DEVICE_ID).build();
+        final DataStore ds = iobeam.createDataStore("col1", "col2");
+        ds.add("col1", 5);
+
+        List<ImportService.Submit> batches = iobeam.prepareDataRequests();
+        assertEquals(1, batches.size());
+        ImportBatch b = (ImportBatch) batches.get(0).getBuilder().getContent();
+        assertFalse(b.isFromLegacy());
+
+        iobeam.addData("test", new DataPoint(10));
+        batches = iobeam.prepareDataRequests();
+        assertEquals(1, batches.size());
+        boolean legacy = false;
+        for (final ImportService.Submit s : batches) {
+            b = (ImportBatch) s.getBuilder().getContent();
+            if (b.getData().getColumns().size() == 1) {
+                assertTrue(b.isFromLegacy());
+                legacy = true;
+            } else {
+                assertFalse(b.isFromLegacy());
+            }
+        }
+        assertTrue(legacy);
     }
 }
