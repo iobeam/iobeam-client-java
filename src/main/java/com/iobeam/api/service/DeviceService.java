@@ -105,10 +105,17 @@ public class DeviceService {
         return add(projectId, new Device.Spec(deviceId, deviceName, deviceType), created);
     }
 
+    public Add add(final Device device) {
+        if (device == null) {
+            throw new IllegalArgumentException("device cannot be null");
+        }
+        return new Add(device);
+    }
+
     public Add add(long projectId, Device.Spec spec, Date created) {
         Date date = created == null ? new Date(System.currentTimeMillis()) : created;
         Device req = new Device(projectId, spec, date);
-        return new Add(req);
+        return add(req);
     }
 
     public Add add(long projectId, Device.Spec spec) {

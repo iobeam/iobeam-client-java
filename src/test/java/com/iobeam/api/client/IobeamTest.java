@@ -344,7 +344,7 @@ public class IobeamTest {
             f.delete();
         }
         long start = System.currentTimeMillis();
-        String now = iobeam.registerDeviceWithId(DEVICE_ID);
+        String now = iobeam.registerDevice(DEVICE_ID);
         long timed = System.currentTimeMillis() - start;
         assertTrue(f.exists());
         assertNotNull(now);
@@ -365,7 +365,7 @@ public class IobeamTest {
             f.delete();
         }
         long start = System.currentTimeMillis();
-        iobeam.registerDeviceWithIdAsync(DEVICE_ID);
+        iobeam.registerDeviceAsync(DEVICE_ID);
         long timed = System.currentTimeMillis() - start;
         String now = iobeam.getDeviceId();
         assertNotNull(now);
@@ -386,7 +386,7 @@ public class IobeamTest {
                 assertTrue(false);
             }
         };
-        iobeam.registerDeviceWithIdAsync(DEVICE_ID, cb);
+        iobeam.registerDeviceAsync(DEVICE_ID, cb);
         assertEquals(prev, iobeam.getDeviceId());
 
         iobeam.reset();
@@ -401,7 +401,7 @@ public class IobeamTest {
 
         // Will hit the network, but credentials are invalid anyway.
         try {
-            iobeam.registerDeviceWithId("new_device_id");
+            iobeam.registerDevice("new_device_id");
         } catch (Exception e) {
             // expected, ignore.
         }
@@ -415,7 +415,7 @@ public class IobeamTest {
         assertNotNull(prev);
         assertEquals(prev, DEVICE_ID);
 
-        iobeam.registerDeviceWithIdAsync("new_device_id");
+        iobeam.registerDeviceAsync("new_device_id");
         // Should be reset before request goes out anyway.
         assertNull(iobeam.getDeviceId());
     }
