@@ -356,6 +356,7 @@ public class Iobeam {
         boolean alreadySet = this.deviceId != null;
         // If device ID is set and not explicitly asking for a different one, return current ID.
         if (alreadySet && (deviceId == null || this.deviceId.equals(deviceId))) {
+            setDeviceId(this.deviceId);
             return this.deviceId;
         }
 

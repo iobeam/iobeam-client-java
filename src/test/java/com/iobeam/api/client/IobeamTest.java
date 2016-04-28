@@ -334,24 +334,36 @@ public class IobeamTest {
 
     @Test
     public synchronized void testRegisterSameIdSync() throws Exception {
-        Iobeam iobeam = getBuilder().setDeviceId(DEVICE_ID).build();
+        Iobeam iobeam = getBuilder().setDeviceId(DEVICE_ID).saveIdToPath(FILE_PATH).build();
         String prev = iobeam.getDeviceId();
         assertNotNull(prev);
         assertEquals(prev, DEVICE_ID);
+        File f = new File(FILE_PATH, "iobeam-device-id");
+        assertTrue(f.exists());
+        if (f.exists()) {
+            f.delete();
+        }
         long start = System.currentTimeMillis();
         String now = iobeam.registerDeviceWithId(DEVICE_ID);
         long timed = System.currentTimeMillis() - start;
+        assertTrue(f.exists());
         assertNotNull(now);
         assertEquals(prev, now);
         assertTrue(timed < 10);  // Should not hit the network; heuristic.
+
+        iobeam.reset();
     }
 
     @Test
     public synchronized void testRegisterSameIdAsync() throws Exception {
-        Iobeam iobeam = getBuilder().setDeviceId(DEVICE_ID).build();
+        Iobeam iobeam = getBuilder().setDeviceId(DEVICE_ID).saveIdToPath(FILE_PATH).build();
         String prev = iobeam.getDeviceId();
         assertNotNull(prev);
         assertEquals(DEVICE_ID, prev);
+        File f = new File(FILE_PATH, "iobeam-device-id");
+        if (f.exists()) {
+            f.delete();
+        }
         long start = System.currentTimeMillis();
         iobeam.registerDeviceWithIdAsync(DEVICE_ID);
         long timed = System.currentTimeMillis() - start;
@@ -376,6 +388,8 @@ public class IobeamTest {
         };
         iobeam.registerDeviceWithIdAsync(DEVICE_ID, cb);
         assertEquals(prev, iobeam.getDeviceId());
+
+        iobeam.reset();
     }
 
     @Test
