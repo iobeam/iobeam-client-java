@@ -98,6 +98,12 @@ public class DataStore implements Serializable {
      * @param value     The value for a field to value mapping
      */
     public void add(long timestamp, String column, Object value) {
+        if (!(value instanceof Long) && !(value instanceof Integer) && !(value instanceof Double) &&
+            !(value instanceof Float) && !(value instanceof Boolean) &&
+            !(value instanceof String)) {
+            throw new IllegalArgumentException(
+                "value must be of type: Long, Integer, Double, Float, Boolean, or String");
+        }
         Map<String, Object> temp = new HashMap<String, Object>();
         temp.put(column, value);
         add(timestamp, temp);
@@ -106,8 +112,10 @@ public class DataStore implements Serializable {
     /**
      * Add a data row, consisting of one column, to the store at the current time.
      *
-     * @param column    The column for a field to value mapping
-     * @param value     The value for a field to value mapping
+     * See {@link #add(long, Map)} for more information.
+     *
+     * @param column The column for a field to value mapping
+     * @param value  The value for a field to value mapping
      */
     public void add(String column, Object value) {
         add(System.currentTimeMillis(), column, value);
@@ -119,8 +127,7 @@ public class DataStore implements Serializable {
      * This method will throw a `MismatchedLengthException` if the length of `columns` and `values`
      * are not the same.
      *
-     * This method will throw an `UnknownFieldException` if `data` contains a key that is not in the
-     * set of columns this batch was constructed with.
+     * See {@link #add(long, Map)} for more information.
      *
      * @param timestamp Timestamp for all data points
      * @param columns   The list of columns for a field to value mapping
@@ -136,8 +143,7 @@ public class DataStore implements Serializable {
      * This method will throw a `MismatchedLengthException` if the length of `columns` and `values`
      * are not the same.
      *
-     * This method will throw an `UnknownFieldException` if `data` contains a key that is not in the
-     * set of columns this batch was constructed with.
+     * See {@link #add(long, Map)} for more information.
      *
      * @param columns The list of columns for a field to value mapping
      * @param values  The list of values for a field to value mapping
@@ -152,8 +158,7 @@ public class DataStore implements Serializable {
      * This method will throw a `MismatchedLengthException` if the size of `columns` and `values`
      * are not the same.
      *
-     * This method will throw an `UnknownFieldException` if `data` contains a key that is not in the
-     * set of columns this batch was constructed with.
+     * See {@link #add(long, Map)} for more information.
      *
      * @param timestamp Timestamp for all data points
      * @param columns   The list of columns for a field to value mapping
@@ -176,8 +181,7 @@ public class DataStore implements Serializable {
      * This method will throw a `MismatchedLengthException` if the size of `columns` and `values`
      * are not the same.
      *
-     * This method will throw an `UnknownFieldException` if `data` contains a key that is not in the
-     * set of columns this batch was constructed with.
+     * See {@link #add(long, Map)} for more information.
      *
      * @param columns The list of columns for a field to value mapping
      * @param values  The list of values for a field to value mapping
@@ -187,7 +191,8 @@ public class DataStore implements Serializable {
     }
 
     /**
-     * Add a data row to the batch at a particular timestamp.
+     * Add a data row to the batch at a particular timestamp, merging with previous values if
+     * needed.
      *
      * This method will throw an `UnknownFieldException` if `data` contains a key that is not in the
      * set of columns this batch was constructed with.
@@ -201,7 +206,13 @@ public class DataStore implements Serializable {
                 throw new UnknownFieldException(k);
             }
         }
-        this.rows.put(timestamp, new HashMap<String, Object>(data));
+
+        Map<String, Object> curr = this.rows.get(timestamp);
+        if (curr == null) {
+            this.rows.put(timestamp, new HashMap<String, Object>(data));
+        } else {
+            curr.putAll(data);
+        }
     }
 
     /**
