@@ -164,22 +164,42 @@ public class Device implements Serializable {
             this.projectId = projectId;
         }
 
+        @Deprecated
         public Builder setId(final String id) {
+            return this.id(id);
+        }
+
+        public Builder id(final String id) {
             this.deviceId = id;
             return this;
         }
 
+        @Deprecated
         public Builder setName(final String name) {
+            return this.name(name);
+        }
+
+        public Builder name(final String name) {
             this.deviceName = name;
             return this;
         }
 
+        @Deprecated
         public Builder setType(final String type) {
+            return this.type(type);
+        }
+
+        public Builder type(final String type) {
             this.deviceType = type;
             return this;
         }
 
+        @Deprecated
         public Builder setCreated(final Date created) {
+            return this.created(created);
+        }
+
+        public Builder created(final Date created) {
             this.created = created;
             return this;
         }
