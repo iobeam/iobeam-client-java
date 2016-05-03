@@ -17,6 +17,7 @@ import java.util.Date;
  */
 public class DeviceService {
 
+    public static final int ERR_DUPLICATE_ID = 150;
     private static final String PATH = "/v1/devices";
     private final RestClient client;
 

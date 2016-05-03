@@ -1,6 +1,7 @@
 package com.iobeam.api.client;
 
 import com.iobeam.api.ApiException;
+import com.iobeam.api.RestException;
 import com.iobeam.api.auth.AuthHandler;
 import com.iobeam.api.auth.DefaultAuthHandler;
 import com.iobeam.api.resource.DataPoint;
@@ -341,8 +342,8 @@ public class Iobeam {
      *
      * See {@link #registerDevice(Device)} for more details.
      *
-     * @param deviceId The desired id for this device; if null, a random one is assigned.
-     * @return The new device id for this device.
+     * @param deviceId The desired id for this device.
+     * @return The device id provided
      * @throws ApiException Thrown if the iobeam client is not initialized or there are problems
      *                      writing the device ID.
      * @throws IOException  Thrown if network errors occur while trying to register.
@@ -367,6 +368,46 @@ public class Iobeam {
      */
     public String registerDevice(String deviceId) throws ApiException, IOException {
         return registerDevice(new Device.Builder(projectId).id(deviceId).build());
+    }
+
+    /**
+     * Registers a device with the provided device ID or sets it if already registered. This call is
+     * <b>BLOCKING</b> and should not be called on UI threads.
+     *
+     * See {@link #registerDevice(Device)} for more details.
+     *
+     * @param deviceId The desired id for this device.
+     * @return The device id provided
+     * @throws ApiException Thrown if the iobeam client is not initialized or there are problems
+     *                      writing the device ID.
+     * @throws IOException  Thrown if network errors occur while trying to register.
+     */
+    public String registerOrSetDevice(final String deviceId) throws ApiException, IOException {
+        return registerOrSetDevice(new Device.Builder(projectId).id(deviceId).build());
+    }
+
+    /**
+     * Registers a device with the provided device ID or sets it if already registered. This call is
+     * <b>BLOCKING</b> and should not be called on UI threads.
+     *
+     * See {@link #registerDevice(Device)} for more details.
+     *
+     * @param device The desired id for this device.
+     * @return The device id provided by the device
+     * @throws ApiException Thrown if the iobeam client is not initialized or there are problems
+     *                      writing the device ID.
+     * @throws IOException  Thrown if network errors occur while trying to register.
+     */
+    public String registerOrSetDevice(final Device device) throws ApiException, IOException {
+        try {
+            return registerDevice(device);
+        } catch (RestException e) {
+            if (e.getError() == DeviceService.ERR_DUPLICATE_ID) {
+                setDevice(device);
+                return device.getId();
+            }
+            throw e;
+        }
     }
 
     /**
@@ -417,10 +458,8 @@ public class Iobeam {
         this.deviceId = null;
 
         DeviceService.Add req = prepareDeviceRequest(device);
-        this.deviceId = req.execute().getId();
-        if (path != null) {
-            persistDeviceId();
-        }
+        String id = req.execute().getId();
+        setDeviceId(id);
         return this.deviceId;
     }
 
