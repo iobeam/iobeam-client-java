@@ -80,6 +80,39 @@ public class Iobeam {
         }
     }
 
+    private static final class IgnoreDupeRegisterCallback extends RegisterCallback {
+
+        private final RegisterCallback userCB;
+        private final Iobeam client;
+
+        public IgnoreDupeRegisterCallback(Iobeam client, RegisterCallback userCB) {
+            this.client = client;
+            this.userCB = userCB;
+        }
+
+        @Override
+        public void onSuccess(String deviceId) {
+            if (userCB != null) {
+                userCB.onSuccess(deviceId);
+            }
+        }
+
+        @Override
+        public void onFailure(Throwable exc, RestRequest req) {
+            if (exc instanceof RestException) {
+                if (((RestException) exc).getError() == DeviceService.ERR_DUPLICATE_ID) {
+                    Device d = (Device) req.getBuilder().getContent();
+                    this.getInnerCallback(client).completed(d, req);
+                    return;
+                }
+            }
+
+            if (userCB != null) {
+                userCB.getInnerCallback(client).failed(exc, req);
+            }
+        }
+    }
+
     public static class Builder {
 
         private final long projectId;
@@ -587,6 +620,25 @@ public class Iobeam {
      */
     public void registerDeviceAsync(Device device) throws ApiException {
         registerDeviceAsync(device, null);
+    }
+
+    public void registerOrSetDeviceAsync(final Device device) throws ApiException {
+        registerDeviceAsync(device, new IgnoreDupeRegisterCallback(this, null));
+    }
+
+    public void registerOrSetDeviceAsync(final Device device, RegisterCallback callback)
+        throws ApiException {
+        registerDeviceAsync(device, new IgnoreDupeRegisterCallback(this, callback));
+    }
+
+    public void registerOrSetDeviceAsync(final String id)
+        throws ApiException {
+        registerOrSetDeviceAsync(new Device.Builder(projectId).id(id).build());
+    }
+
+    public void registerOrSetDeviceAsync(final String id, RegisterCallback callback)
+        throws ApiException {
+        registerOrSetDeviceAsync(new Device.Builder(projectId).id(id).build(), callback);
     }
 
     /**
