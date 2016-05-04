@@ -51,6 +51,7 @@ public abstract class RegisterCallback {
 
     /**
      * Called when the device registration request succeeds
+     *
      * @param device Device object that was created.
      */
     public void onSuccess(Device device) {

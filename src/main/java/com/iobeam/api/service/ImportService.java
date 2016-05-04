@@ -5,8 +5,8 @@ import com.iobeam.api.client.RestRequest;
 import com.iobeam.api.http.ContentType;
 import com.iobeam.api.http.RequestMethod;
 import com.iobeam.api.http.StatusCode;
-import com.iobeam.api.resource.DataStore;
 import com.iobeam.api.resource.DataPoint;
+import com.iobeam.api.resource.DataStore;
 import com.iobeam.api.resource.Import;
 import com.iobeam.api.resource.ImportBatch;
 

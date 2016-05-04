@@ -3,8 +3,8 @@ package com.iobeam.api.client;
 import com.iobeam.api.ApiException;
 import com.iobeam.api.auth.AuthHandler;
 import com.iobeam.api.auth.DefaultAuthHandler;
-import com.iobeam.api.resource.DataStore;
 import com.iobeam.api.resource.DataPoint;
+import com.iobeam.api.resource.DataStore;
 import com.iobeam.api.resource.Device;
 import com.iobeam.api.resource.Import;
 import com.iobeam.api.resource.ImportBatch;
@@ -18,11 +18,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
@@ -356,6 +356,7 @@ public class Iobeam {
         boolean alreadySet = this.deviceId != null;
         // If device ID is set and not explicitly asking for a different one, return current ID.
         if (alreadySet && (deviceId == null || this.deviceId.equals(deviceId))) {
+            setDeviceId(this.deviceId);
             return this.deviceId;
         }
 
@@ -508,13 +509,13 @@ public class Iobeam {
         }
         dataStore.addDataPoint(seriesName, dataPoint);
 
-        DataStore batch = seriesToBatch.get(seriesName);
-        if (batch == null) {
-            batch = new DataStore(new String[]{seriesName});
-            seriesToBatch.put(seriesName, batch);
-            dataBatches.add(batch);
+        DataStore store = seriesToBatch.get(seriesName);
+        if (store == null) {
+            store = new DataStore(seriesName);
+            seriesToBatch.put(seriesName, store);
+            dataBatches.add(store);
         }
-        batch.add(dataPoint.getTime(), new String[]{seriesName}, new Object[]{dataPoint.getValue()});
+        store.add(dataPoint.getTime(), seriesName, dataPoint.getValue());
     }
 
     /**
@@ -582,13 +583,13 @@ public class Iobeam {
     }
 
     /**
-     * Creates a DataStore with a given set of columns, and tracks it so that
-     * any data added will be sent on a subsequent send calls.
+     * Creates a DataStore with a given set of columns, and tracks it so that any data added will be
+     * sent on a subsequent send calls.
      *
      * @param columns Columns in the DataStore
      * @return DataStore for storing data for a given set of columns.
      */
-    public DataStore createDataStore(Set<String> columns) {
+    public DataStore createDataStore(Collection<String> columns) {
         DataStore b = new DataStore(columns);
         trackDataStore(b);
 
@@ -596,22 +597,8 @@ public class Iobeam {
     }
 
     /**
-     * Creates a DataStore with a given set of columns, and tracks it so that
-     * any data added will be sent on a subsequent send calls.
-     *
-     * @param columns Columns in the DataStore
-     * @return DataStore for storing data for a given set of columns.
-     */
-    public DataStore createDataStore(List<String> columns) {
-        DataStore b = new DataStore(columns);
-        trackDataStore(b);
-
-        return b;
-    }
-
-    /**
-     * Creates a DataStore with a given set of columns, and tracks it so that
-     * any data added will be sent on a subsequent send calls.
+     * Creates a DataStore with a given set of columns, and tracks it so that any data added will be
+     * sent on a subsequent send calls.
      *
      * @param columns Columns in the DataStore
      * @return DataStore for storing data for a given set of columns.
@@ -621,16 +608,21 @@ public class Iobeam {
     }
 
     /**
-     * Track a DataStore so that any data stored in it will be sent on subsequent
-     * send calls.
+     * Track a DataStore so that any data stored in it will be sent on subsequent send calls.
      *
      * @param batch Data stored in a batch/table format.
+     * @deprecated Use {@link #trackDataStore(DataStore)} instead.
      */
     @Deprecated
     public void trackDataBatch(DataStore batch) {
         trackDataStore(batch);
     }
 
+    /**
+     * Track a DataStore so that any data stored in it will be sent on subsequent send calls.
+     *
+     * @param store DataStore to be tracked by this client.
+     */
     public void trackDataStore(DataStore store) {
         synchronized (dataStoreLock) {
             dataBatches.add(store);
@@ -641,7 +633,7 @@ public class Iobeam {
      * Returns the size of all of the data in all the series.
      *
      * @return Size of the data store, or 0 if it has not been made yet.
-     * @deprecated Use `getDataSize()` instead.
+     * @deprecated Use {@link #getDataSize()} instead.
      */
     @Deprecated
     public long getTotalDataSize() {
@@ -665,6 +657,7 @@ public class Iobeam {
 
     /**
      * Returns the size of the data set in a particular series.
+     *
      * @param series The series to query
      * @return Size of the data set, or 0 if series does not exist.
      * @deprecated Use batch methods instead.
@@ -693,7 +686,8 @@ public class Iobeam {
         }
     }
 
-    private List<ImportService.Submit> prepareDataRequests() throws ApiException {
+
+    List<ImportService.Submit> prepareDataRequests() throws ApiException {
         if (!isInitialized()) {
             throw new NotInitializedException();
         }
@@ -702,33 +696,37 @@ public class Iobeam {
         }
 
         // Synchronize so no more data is added to this object while we send.
-        List<DataStore> batches;
+        final List<DataStore> stores;
         synchronized (dataStoreLock) {
             dataStore = null;
 
             if (dataBatches != null) {
-                batches = new ArrayList<DataStore>(dataBatches.size());
+                stores = new ArrayList<DataStore>(dataBatches.size());
                 for (DataStore b : dataBatches) {
                     if (b.getRows().size() > 0) {
-                        batches.add(DataStore.snapshot(b));
+                        stores.add(DataStore.snapshot(b));
                         b.reset();
                     }
                 }
             } else {
-                batches = Collections.<DataStore>emptyList();
+                stores = Collections.<DataStore>emptyList();
             }
         }
         // No data to send, log a warning and return an empty list.
-        if (batches.size() == 0) {
+        if (stores.size() == 0) {
             logger.warning("No data to send.");
             return new ArrayList<ImportService.Submit>();
         }
 
         List<ImportBatch> impBatches = new ArrayList<ImportBatch>();
-        for (DataStore batch : batches) {
-            boolean legacy = batch.getColumns().size() == 1 &&
-                             seriesToBatch.containsKey(batch.getColumns().get(0));
-            impBatches.add(ImportBatch.createLegacy(projectId, deviceId, batch));
+        for (final DataStore store : stores) {
+            boolean legacy = store.getColumns().size() == 1 &&
+                             seriesToBatch.containsKey(store.getColumns().get(0));
+            if (legacy) {
+                impBatches.add(ImportBatch.createLegacy(projectId, deviceId, store));
+            } else {
+                impBatches.add(new ImportBatch(projectId, deviceId, store));
+            }
         }
 
         ImportService service = new ImportService(client);

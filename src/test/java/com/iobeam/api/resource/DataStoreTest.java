@@ -109,7 +109,7 @@ public class DataStoreTest {
         }
     }
 
-    @Test(expected=JSONException.class)
+    @Test(expected = JSONException.class)
     public void testFromJsonInvalidCols() throws Exception {
         JSONObject obj = new JSONObject();
         JSONArray fields = new JSONArray();
@@ -173,6 +173,37 @@ public class DataStoreTest {
     public void testEmptyColumn() throws Exception {
         DataStore ds = new DataStore("good", "");
         ds.clear();
+    }
+
+    @Test
+    public void testDuplicateAddTime() throws Exception {
+        DataStore ds = new DataStore("col1", "col2");
+        ds.add(0, "col1", 5);
+        Map<String, Object> data = ds.getRows().get(0L);
+        assertEquals(1, data.size());
+        assertEquals(5, data.get("col1"));
+        ds.add(0, "col2", 10);
+        data = ds.getRows().get(0L);
+        assertEquals(2, data.size());
+        assertEquals(5, data.get("col1"));
+        assertEquals(10, data.get("col2"));
+    }
+
+    @Test
+    public void testAddSingleValue() throws Exception {
+        DataStore ds = new DataStore("col1");
+        ds.add("col1", 1);
+        ds.add("col1", 100L);
+        ds.add("col1", 1.0F);
+        ds.add("col1", 5.0D);
+        ds.add("col1", true);
+        ds.add("col1", "string");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testAddBadSingleValue() throws Exception {
+        DataStore ds = new DataStore("col1");
+        ds.add("col1", new Object[]{1.0});
     }
 
     @Test
