@@ -51,7 +51,7 @@ If you are building an Android app, add the following lines to your `app/build.g
 
     dependencies {
         ...
-        compile('com.iobeam:iobeam-client-java:0.5.9') {
+        compile('com.iobeam:iobeam-client-java:0.5.13') {
             exclude module: 'json'
         }
     }
@@ -106,7 +106,7 @@ iobeam.registerDeviceAsync();
 
 ```java
 Iobeam iobeam = new Iobeam.Builder(PROJECT_ID, PROJECT_TOKEN).saveIdToPath(PATH).build();
-iobeam.registerDeviceWithIdAsync("my_desired_device_id");
+iobeam.registerDeviceAsync("my_desired_device_id");
 ```
 
 The `device_id` will be saved to disk at the path `PATH`. On Android, this would be set to something
