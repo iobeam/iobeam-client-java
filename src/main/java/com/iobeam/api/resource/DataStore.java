@@ -279,6 +279,16 @@ public class DataStore implements Serializable {
     }
 
     /**
+     * Check if this DataStore has the given columns.
+     *
+     * @param columns Columns to check for
+     * @return True if the column sets are equal
+     */
+    public boolean hasColumns(Collection<String> columns) {
+        return columns != null && this.columns.equals(new TreeSet<String>(columns));
+    }
+
+    /**
      * Create a DataStore object from JSON.
      *
      * @param json JSON of the DataStore
