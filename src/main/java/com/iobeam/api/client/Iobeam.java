@@ -1,8 +1,8 @@
 package com.iobeam.api.client;
 
 import com.iobeam.api.ApiException;
-import com.iobeam.api.RestException;
 import com.iobeam.api.IobeamException;
+import com.iobeam.api.RestException;
 import com.iobeam.api.auth.AuthHandler;
 import com.iobeam.api.auth.DefaultAuthHandler;
 import com.iobeam.api.resource.DataPoint;
@@ -689,6 +689,36 @@ public class Iobeam {
     @Deprecated
     Import getDataStore() {
         return dataStore;
+    }
+
+    /**
+     * Get the DataStore associated with a collection of column names.
+     *
+     * @param columns Collection of columns to find a corresponding DataStore for.
+     * @return DataStore corresponding to the columns, or null if not found.
+     */
+    public DataStore getDataStore(final Collection<String> columns) {
+        for (DataStore ds : dataBatches) {
+            if (ds.hasColumns(columns)) {
+                return ds;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get the DataStore associated with a collection of column names, adding a new one if
+     * necessary.
+     *
+     * @param columns Collection of columns to find a corresponding DataStore for.
+     * @return DataStore corresponding to the columns.
+     */
+    public DataStore getOrAddDataStore(final Collection<String> columns) {
+        DataStore ret = getDataStore(columns);
+        if (ret == null) {
+            ret = this.createDataStore(columns);
+        }
+        return ret;
     }
 
     /* A lock should always be acquired before calling this method! */
