@@ -51,7 +51,7 @@ If you are building an Android app, add the following lines to your `app/build.g
 
     dependencies {
         ...
-        compile('com.iobeam:iobeam-client-java:0.5.13') {
+        compile('com.iobeam:iobeam-client-java:0.6.0') {
             exclude module: 'json'
         }
     }
