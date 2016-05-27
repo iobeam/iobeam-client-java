@@ -10,6 +10,8 @@ import org.json.JSONObject;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -292,6 +294,25 @@ public class DataStoreTest {
         DataStore b3 = new DataStore("a", "c", "b");
         assertTrue(b1.hasSameColumns(b3));
         assertTrue(b3.hasSameColumns(b1));
+    }
+
+    @Test
+    public void testHasColumns() throws Exception {
+        DataStore b1 = new DataStore("a", "b", "c");
+        assertFalse(b1.hasColumns(null));
+        assertFalse(b1.hasColumns(Collections.<String>emptyList()));
+
+        String[] cols = {"a", "b", "c"};
+        assertTrue(b1.hasColumns(Arrays.asList(cols)));
+
+        cols = new String[]{"c", "a", "b"};
+        assertTrue(b1.hasColumns(Arrays.asList(cols)));
+
+        cols = new String[]{"a", "b"};
+        assertFalse(b1.hasColumns(Arrays.asList(cols)));
+
+        cols = new String[]{"a", "b", "c", "d"};
+        assertFalse(b1.hasColumns(Arrays.asList(cols)));
     }
 
     @Test

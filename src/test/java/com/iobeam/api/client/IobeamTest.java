@@ -20,6 +20,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class IobeamTest {
 
@@ -45,19 +48,6 @@ public class IobeamTest {
         iobeam.reset();
     }
 
-    @Deprecated  // remove when constructors are removed
-    @Test
-    public void testConstructorNoDeviceSave() throws Exception {
-        Iobeam iobeam = new Iobeam(FILE_PATH, PROJECT_ID, PROJECT_TOKEN);
-        assertNotNull(iobeam.path);
-        assertEquals(FILE_PATH, iobeam.path);
-        assertEquals(PROJECT_ID, iobeam.projectId);
-        assertEquals(PROJECT_TOKEN, iobeam.projectToken);
-        assertNull(iobeam.deviceId);
-        assertFalse(iobeam.getAutoRetry());
-
-        iobeam.reset();
-    }
 
     @Test
     public void testBuilderNoDeviceNoSave() throws Exception {
@@ -69,34 +59,10 @@ public class IobeamTest {
         assertFalse(iobeam.getAutoRetry());
     }
 
-    @Deprecated  // remove when constructors are removed
-    @Test
-    public void testConstructorNoDeviceNoSave() throws Exception {
-        Iobeam iobeam = new Iobeam(null, PROJECT_ID, PROJECT_TOKEN);
-        assertNull(iobeam.path);
-        assertEquals(PROJECT_ID, iobeam.projectId);
-        assertEquals(PROJECT_TOKEN, iobeam.projectToken);
-        assertNull(iobeam.deviceId);
-    }
 
     @Test
     public void testBuilderDeviceNoSave() throws Exception {
         Iobeam iobeam = getBuilder().setDeviceId(DEVICE_ID).build();
-        assertNull(iobeam.path);
-        assertEquals(PROJECT_ID, iobeam.projectId);
-        assertEquals(PROJECT_TOKEN, iobeam.projectToken);
-        assertNotNull(iobeam.deviceId);
-        assertEquals(DEVICE_ID, iobeam.deviceId);
-
-        // Should not be on disk
-        File f = new File(FILE_PATH, Iobeam.DEVICE_FILENAME);
-        assertFalse(f.exists());
-    }
-
-    @Deprecated  // remove when constructors are removed
-    @Test
-    public void testConstructorDeviceNoSave() throws Exception {
-        Iobeam iobeam = new Iobeam(null, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);
         assertNull(iobeam.path);
         assertEquals(PROJECT_ID, iobeam.projectId);
         assertEquals(PROJECT_TOKEN, iobeam.projectToken);
@@ -127,41 +93,6 @@ public class IobeamTest {
 
         // New iobeam object uses disk ID
         Iobeam iobeam2 = getBuilder().saveIdToPath(FILE_PATH).build();
-        assertNotNull(iobeam2.path);
-        assertEquals(FILE_PATH, iobeam2.path);
-        assertEquals(DEVICE_ID, iobeam2.deviceId);
-
-        // Test that the one written to disk is overwritten.
-        iobeam.reset();
-        final String DEVICE_ID_NEW = "thisisadifferentid";
-        assertNotEquals(DEVICE_ID, DEVICE_ID_NEW);
-        iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID_NEW, Iobeam.DEFAULT_API_URL);
-        assertNotNull(iobeam.deviceId);
-        assertEquals(DEVICE_ID_NEW, iobeam.deviceId);
-
-        iobeam2.reset();
-    }
-
-    @Deprecated  // remove when constructors are removed
-    @Test
-    public void testInitDeviceWithDisk() throws Exception {
-        // Set a device ID then reset state.
-        Iobeam iobeam = new Iobeam(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, DEVICE_ID);
-        assertNotNull(iobeam.path);
-        File f = new File(FILE_PATH, Iobeam.DEVICE_FILENAME);
-        assertTrue(f.exists());
-        iobeam.reset(false);  // simulates app being closed, 'false' keeps ID on disk
-
-        // Test that the persisted device ID is used.
-        iobeam.init(FILE_PATH, PROJECT_ID, PROJECT_TOKEN, null, Iobeam.DEFAULT_API_URL);
-        assertEquals(FILE_PATH, iobeam.path);
-        assertEquals(PROJECT_ID, iobeam.projectId);
-        assertEquals(PROJECT_TOKEN, iobeam.projectToken);
-        assertNotNull(iobeam.deviceId);
-        assertEquals(DEVICE_ID, iobeam.deviceId);
-
-        // New iobeam object uses disk ID
-        Iobeam iobeam2 = new Iobeam(FILE_PATH, PROJECT_ID, PROJECT_TOKEN);
         assertNotNull(iobeam2.path);
         assertEquals(FILE_PATH, iobeam2.path);
         assertEquals(DEVICE_ID, iobeam2.deviceId);
@@ -454,5 +385,32 @@ public class IobeamTest {
             }
         }
         assertTrue(legacy);
+    }
+
+    @Test
+    public void testReinsertSendCallback() throws Exception {
+        final Iobeam iobeam = getBuilder().autoRetry().setDeviceId(DEVICE_ID).build();
+        final DataStore ds = iobeam.createDataStore("col1");
+        ds.add("col1", 5.0);
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AtomicBoolean called = new AtomicBoolean(false);
+        final SendCallback cb = new SendCallback() {
+            @Override
+            public void onSuccess(ImportBatch data) {
+            }
+
+            @Override
+            public void onFailure(Throwable exc, ImportBatch data) {
+                called.set(true);
+                latch.countDown();
+            }
+        };
+        iobeam.sendAsync(cb);
+        assertFalse(called.get()); // should not have been completed by this time
+        assertEquals(0, ds.getDataSize());
+        latch.await(10, TimeUnit.SECONDS);
+        assertTrue(called.get());
+        assertEquals(1, ds.getDataSize());
     }
 }

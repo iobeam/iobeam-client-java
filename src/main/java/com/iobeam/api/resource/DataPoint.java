@@ -5,8 +5,6 @@ import org.json.JSONObject;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A resource representing a data point in a time series. This is represented by a timestamp and a
@@ -31,62 +29,6 @@ public class DataPoint implements Serializable {
     private final long time;
     private final Object data;
 
-    /**
-     * Takes a string that is a delimited list of values all of a particular type (integer, long,
-     * float, double, or string) and parses them into a List of DataPoints all with the same
-     * timestamp (the current time).
-     *
-     * @param points     Delimited string containing points to be parsed.
-     * @param splitRegex Delimiter to split the string on (e.g., a comma (,) for csv).
-     * @param type       Data type of the points, either Integer/Long, Float/Double, or String.
-     * @return A DataPoint List of all parseable points.
-     * @deprecated com.iobeam.api.resource.util.DataPointParser.parse() should be used instead. Will
-     * be removed in the next release.
-     */
-    // TODO(robatticus) Remove in 0.6.0
-    @Deprecated
-    public static List<DataPoint> parseDataPoints(String points,
-                                                  String splitRegex,
-                                                  Class<?> type) {
-        return parseDataPoints(points, splitRegex, type, System.currentTimeMillis());
-    }
-
-    /**
-     * Takes a string that is a delimited list of values all of a particular type (integer, long,
-     * float, double, or string) and parses them into a List of DataPoints all with the same
-     * timestamp.
-     *
-     * @param points     Delimited string containing points to be parsed.
-     * @param splitRegex Delimiter to split the string on (e.g., a comma (,) for csv).
-     * @param type       Data type of the points, either Integer/Long, Float/Double, or String.
-     * @param ts         The timestamp to apply to all the points.
-     * @return A DataPoint List of all parseable points.
-     * @deprecated com.iobeam.api.resource.util.DataPointParser.parse() should be used instead. Will
-     * be removed in the next release.
-     */
-    // TODO(robatticus) Remove in 0.6.0
-    @Deprecated
-    public static List<DataPoint> parseDataPoints(String points,
-                                                  String splitRegex,
-                                                  Class<?> type,
-                                                  long ts) {
-        String[] items = points.split(splitRegex);
-        List<DataPoint> ret = new ArrayList<DataPoint>();
-        for (String i : items) {
-            if (i.length() == 0) {
-                continue;
-            }
-
-            if (type == Long.class || type == Integer.class) {
-                ret.add(new DataPoint(ts, Long.parseLong(i)));
-            } else if (type == Float.class || type == Double.class) {
-                ret.add(new DataPoint(ts, Double.parseDouble(i)));
-            } else if (type == String.class) {
-                ret.add(new DataPoint(ts, i));
-            }
-        }
-        return ret;
-    }
 
     /**
      * Constructor for a point containing integer data

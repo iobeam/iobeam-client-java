@@ -4,7 +4,6 @@ import org.json.JSONObject;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -118,43 +117,5 @@ public class DataPointTest {
         byte[] temp = new byte[strSize];
         buf.get(temp, 0, strSize);
         assertEquals("11.2", new String(temp));
-    }
-
-    // REMOVE IN NEXT RELEASE
-
-    @Test
-    public void testCsvIntParse() throws Exception {
-        long ts = 1001;
-        List<DataPoint> list = DataPoint.parseDataPoints(csvInts, ",", Long.class, ts);
-        assertEquals(4, list.size());
-        for (DataPoint d : list) {
-            assertEquals(ts, d.getTime());
-        }
-        assertEquals(1l, list.get(0).getValue());
-        assertEquals(10l, list.get(1).getValue());
-        assertEquals(100l, list.get(2).getValue());
-        assertEquals(1000l, list.get(3).getValue());
-    }
-
-    @Test
-    public void testRealParse() throws Exception {
-        long ts = 2001;
-        List<DataPoint> list = DataPoint.parseDataPoints(otherReals, "&", Double.class, ts);
-        assertEquals(4, list.size());
-        for (DataPoint d : list) {
-            assertEquals(ts, d.getTime());
-        }
-        assertEquals(1d, list.get(0).getValue());
-        assertEquals(2d, list.get(1).getValue());
-        assertEquals(5d, list.get(2).getValue());
-        assertEquals(10d, list.get(3).getValue());
-    }
-
-    @Test
-    public void testInvalidTypeParse() throws Exception {
-        // Ideally, this call would be rejected as List is not an appropriate type, but we'll
-        // leave that as a TODO.
-        List<DataPoint> list = DataPoint.parseDataPoints(csvInts, ",", List.class);
-        assertEquals(0, list.size());
     }
 }

@@ -1,6 +1,7 @@
 package com.iobeam.api.client;
 
 import com.iobeam.api.ApiException;
+import com.iobeam.api.IobeamException;
 import com.iobeam.api.RestException;
 import com.iobeam.api.auth.AuthHandler;
 import com.iobeam.api.auth.DefaultAuthHandler;
@@ -62,21 +63,30 @@ public class Iobeam {
     /**
      * SendCallback used when autoRetry is set.
      */
-    private static final class ReinsertSendCallback extends SendCallback {
+    static final class ReinsertSendCallback extends SendCallback {
 
+        private final SendCallback userCB;
         private final Iobeam client;
 
-        public ReinsertSendCallback(Iobeam iobeam) {
+        public ReinsertSendCallback(Iobeam iobeam, SendCallback userCB) {
             this.client = iobeam;
+            this.userCB = userCB;
         }
 
         @Override
         public void onSuccess(ImportBatch data) {
+            if (userCB != null) {
+                userCB.onSuccess(data);
+            }
         }
 
         @Override
         public void onFailure(Throwable exc, ImportBatch data) {
             client.addBulkData(data);
+
+            if (userCB != null) {
+                userCB.onFailure(exc, data);
+            }
         }
     }
 
@@ -190,37 +200,6 @@ public class Iobeam {
     private Iobeam(long projectId, String projectToken, String path, String deviceId, String url)
         throws ApiException {
         init(path, projectId, projectToken, deviceId, url);
-    }
-
-    /**
-     * Constructs an Iobeam object without a device ID.
-     *
-     * @param path         Directory where the device ID file, iobeam-device-id, should be written.
-     *                     If null, the device ID is <b>not</b> persisted.
-     * @param projectId    The numeric project ID to associate with.
-     * @param projectToken The token to use when communicating with iobeam cloud.
-     * @throws ApiException Thrown if something goes wrong with initializing the device ID.
-     */
-    @Deprecated
-    public Iobeam(String path, long projectId, String projectToken)
-        throws ApiException {
-        this(path, projectId, projectToken, null);
-    }
-
-    /**
-     * Constructs an Iobeam object with a device ID.
-     *
-     * @param path         Directory where the device ID file, iobeam-device-id, should be written.
-     *                     If null, the device ID is <b>not</b> persisted.
-     * @param projectId    The numeric project ID to associate with.
-     * @param projectToken The token to use when communicating with iobeam cloud.
-     * @param deviceId     Pre-registered device id to be used.
-     * @throws ApiException Thrown if something goes wrong with initializing the device ID.
-     */
-    @Deprecated
-    public Iobeam(String path, long projectId, String projectToken, String deviceId)
-        throws ApiException {
-        init(path, projectId, projectToken, deviceId, DEFAULT_API_URL);
     }
 
     /**
@@ -501,9 +480,11 @@ public class Iobeam {
      *
      * See {@link #registerDeviceAsync(Device, RegisterCallback)} for more details.
      *
-     * @throws ApiException Thrown if the iobeam client is not initialized.
+     * @throws IobeamException Thrown if the iobeam client is not initialized AND a callback is not
+     *                         provided. If a callback is provided, the exception is passed to the
+     *                         callback.
      */
-    public void registerDeviceAsync() throws ApiException {
+    public void registerDeviceAsync() {
         registerDeviceAsync((Device) null, null);
     }
 
@@ -513,9 +494,11 @@ public class Iobeam {
      * See {@link #registerDeviceAsync(Device, RegisterCallback)} for more details.
      *
      * @param callback Callback for result of the registration.
-     * @throws ApiException Thrown if the iobeam client is not initialized.
+     * @throws IobeamException Thrown if the iobeam client is not initialized AND a callback is not
+     *                         provided. If a callback is provided, the exception is passed to the
+     *                         callback.
      */
-    public void registerDeviceAsync(RegisterCallback callback) throws ApiException {
+    public void registerDeviceAsync(RegisterCallback callback) {
         registerDeviceAsync((Device) null, callback);
     }
 
@@ -529,7 +512,7 @@ public class Iobeam {
      * @deprecated Use {@link #registerDeviceAsync(String)} instead.
      */
     @Deprecated
-    public void registerDeviceWithIdAsync(String deviceId) throws ApiException {
+    public void registerDeviceWithIdAsync(String deviceId) {
         registerDeviceAsync(deviceId, null);
     }
 
@@ -539,9 +522,11 @@ public class Iobeam {
      * See {@link #registerDeviceAsync(Device, RegisterCallback)} for more details.
      *
      * @param deviceId Desired device ID.
-     * @throws ApiException Thrown if the iobeam client is not initialized.
+     * @throws IobeamException Thrown if the iobeam client is not initialized AND a callback is not
+     *                         provided. If a callback is provided, the exception is passed to the
+     *                         callback.
      */
-    public void registerDeviceAsync(String deviceId) throws ApiException {
+    public void registerDeviceAsync(String deviceId) {
         registerDeviceAsync(deviceId, null);
     }
 
@@ -555,7 +540,7 @@ public class Iobeam {
      * @deprecated Use {@link #registerDeviceAsync(Device)} instead. Will be removed after 0.6.x
      */
     @Deprecated
-    public void registerDeviceWithIdAsync(String deviceId, String deviceName) throws ApiException {
+    public void registerDeviceWithIdAsync(String deviceId, String deviceName) {
         final Device d = new Device.Builder(projectId).id(deviceId).name(deviceName).build();
         registerDeviceAsync(d, null);
     }
@@ -571,8 +556,7 @@ public class Iobeam {
      * @deprecated Use {@link #registerDeviceAsync(String, RegisterCallback)} instead.
      */
     @Deprecated
-    public void registerDeviceWithIdAsync(String deviceId, RegisterCallback callback)
-        throws ApiException {
+    public void registerDeviceWithIdAsync(String deviceId, RegisterCallback callback) {
         registerDeviceAsync(deviceId, callback);
     }
 
@@ -585,8 +569,7 @@ public class Iobeam {
      * @param callback Callback for result of the registration.
      * @throws ApiException Thrown if the iobeam client is not initialized.
      */
-    public void registerDeviceAsync(String deviceId, RegisterCallback callback)
-        throws ApiException {
+    public void registerDeviceAsync(String deviceId, RegisterCallback callback) {
         final Device d = new Device.Builder(projectId).id(deviceId).build();
         registerDeviceAsync(d, callback);
     }
@@ -605,7 +588,7 @@ public class Iobeam {
      */
     @Deprecated
     public void registerDeviceWithIdAsync(String deviceId, String deviceName,
-                                          RegisterCallback callback) throws ApiException {
+                                          RegisterCallback callback) {
         final Device d = new Device.Builder(projectId).id(deviceId).name(deviceName).build();
         registerDeviceAsync(d, callback);
     }
@@ -653,8 +636,7 @@ public class Iobeam {
      * @param callback Callback for result of the registration.
      * @throws ApiException Thrown if the iobeam client is not initialized.
      */
-    public void registerDeviceAsync(Device device, RegisterCallback callback)
-        throws ApiException {
+    public void registerDeviceAsync(Device device, RegisterCallback callback) {
         RestCallback<Device> cb;
         if (callback == null) {
             cb = RegisterCallback.getEmptyCallback().getInnerCallback(this);
@@ -671,7 +653,19 @@ public class Iobeam {
 
         // Make sure to unset before attempting, so as not to reuse old ID if it fails.
         this.deviceId = null;
-        DeviceService.Add req = prepareDeviceRequest(device);
+
+        final DeviceService.Add req;
+        try {
+            req = prepareDeviceRequest(device);
+        } catch (ApiException e) {
+            IobeamException ie = new IobeamException(e);
+            if (callback == null) {
+                throw ie;
+            } else {
+                cb.failed(ie, null);
+                return;
+            }
+        }
         req.executeAsync(cb);
     }
 
@@ -704,6 +698,36 @@ public class Iobeam {
     @Deprecated
     Import getDataStore() {
         return dataStore;
+    }
+
+    /**
+     * Get the DataStore associated with a collection of column names.
+     *
+     * @param columns Collection of columns to find a corresponding DataStore for.
+     * @return DataStore corresponding to the columns, or null if not found.
+     */
+    public DataStore getDataStore(final Collection<String> columns) {
+        for (DataStore ds : dataBatches) {
+            if (ds.hasColumns(columns)) {
+                return ds;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get the DataStore associated with a collection of column names, adding a new one if
+     * necessary.
+     *
+     * @param columns Collection of columns to find a corresponding DataStore for.
+     * @return DataStore corresponding to the columns.
+     */
+    public DataStore getOrAddDataStore(final Collection<String> columns) {
+        DataStore ret = getDataStore(columns);
+        if (ret == null) {
+            ret = this.createDataStore(columns);
+        }
+        return ret;
     }
 
     /* A lock should always be acquired before calling this method! */
@@ -761,7 +785,7 @@ public class Iobeam {
         return true;
     }
 
-    private void addBulkData(ImportBatch data) {
+    private void addBulkData(final ImportBatch data) {
         if (data == null) {
             return;
         }
@@ -777,11 +801,8 @@ public class Iobeam {
                 db.merge(data.getData());
             }
         } else {
-            for (DataStore db : dataBatches) {
-                if (db.hasSameColumns(data.getData())) {
-                    db.merge(data.getData());
-                }
-            }
+            final DataStore ds = getDataStore(data.getData().getColumns());
+            ds.merge(data.getData());
         }
     }
 
@@ -836,17 +857,6 @@ public class Iobeam {
      * Returns the size of all of the data in all the series.
      *
      * @return Size of the data store, or 0 if it has not been made yet.
-     * @deprecated Use {@link #getDataSize()} instead.
-     */
-    @Deprecated
-    public long getTotalDataSize() {
-        return getDataSize();
-    }
-
-    /**
-     * Returns the size of all of the data in all the series.
-     *
-     * @return Size of the data store, or 0 if it has not been made yet.
      */
     public long getDataSize() {
         long size = 0;
@@ -863,7 +873,7 @@ public class Iobeam {
      *
      * @param series The series to query
      * @return Size of the data set, or 0 if series does not exist.
-     * @deprecated Use batch methods instead.
+     * @deprecated Use DataStore methods instead.
      */
     @Deprecated
     public int getDataSize(String series) {
@@ -955,7 +965,7 @@ public class Iobeam {
                 req.execute();
             } catch (Exception e) {
                 if (autoRetry) {
-                    ReinsertSendCallback cb = new ReinsertSendCallback(this);
+                    ReinsertSendCallback cb = new ReinsertSendCallback(this, null);
                     cb.innerCallback.failed(e, req);
                 }
 
@@ -975,10 +985,11 @@ public class Iobeam {
      *
      * If `autoRetry` is set, failed requests will add the previous data to the new data store.
      *
-     * @throws ApiException Thrown is the client is not initialized or if the device id has not been
-     *                      set.
+     * @throws IobeamException Thrown is the client is not initialized or if the device id has not
+     *                         been set AND no callback set. Otherwise, the exception is passed to
+     *                         the callback.
      */
-    public void sendAsync() throws ApiException {
+    public void sendAsync() {
         sendAsync(null);
     }
 
@@ -989,18 +1000,31 @@ public class Iobeam {
      * If `autoRetry` is set, failed requests will add the previous data to the new data store.
      *
      * @param callback Callback for when the operation completes.
-     * @throws ApiException Thrown is the client is not initialized or if the device id has not been
-     *                      set.
+     * @throws IobeamException Thrown is the client is not initialized or if the device id has not
+     *                         been set AND no callback set. Otherwise, the exception is passed to
+     *                         the callback.
      */
-    public void sendAsync(SendCallback callback) throws ApiException {
-        List<ImportService.Submit> reqs = prepareDataRequests();
+    public void sendAsync(SendCallback callback) {
+        List<ImportService.Submit> reqs;
+        try {
+            reqs = prepareDataRequests();
+        } catch (ApiException e) {
+            IobeamException ie = new IobeamException(e);
+            if (callback == null) {
+                throw ie;
+            } else {
+                callback.innerCallback.failed(ie, null);
+                return;
+            }
+        }
+
         for (ImportService.Submit req : reqs) {
             if (callback == null && !autoRetry) {
                 req.executeAsync();
-            } else if (callback == null) {
-                req.executeAsync(new ReinsertSendCallback(this).innerCallback);
-            } else {
+            } else if (callback != null && !autoRetry) {
                 req.executeAsync(callback.innerCallback);
+            } else {
+                req.executeAsync(new ReinsertSendCallback(this, callback).innerCallback);
             }
         }
     }
