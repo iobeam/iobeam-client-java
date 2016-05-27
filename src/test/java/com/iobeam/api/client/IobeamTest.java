@@ -20,6 +20,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class IobeamTest {
 
@@ -382,5 +385,32 @@ public class IobeamTest {
             }
         }
         assertTrue(legacy);
+    }
+
+    @Test
+    public void testReinsertSendCallback() throws Exception {
+        final Iobeam iobeam = getBuilder().autoRetry().setDeviceId(DEVICE_ID).build();
+        final DataStore ds = iobeam.createDataStore("col1");
+        ds.add("col1", 5.0);
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AtomicBoolean called = new AtomicBoolean(false);
+        final SendCallback cb = new SendCallback() {
+            @Override
+            public void onSuccess(ImportBatch data) {
+            }
+
+            @Override
+            public void onFailure(Throwable exc, ImportBatch data) {
+                called.set(true);
+                latch.countDown();
+            }
+        };
+        iobeam.sendAsync(cb);
+        assertFalse(called.get()); // should not have been completed by this time
+        assertEquals(0, ds.getDataSize());
+        latch.await(10, TimeUnit.SECONDS);
+        assertTrue(called.get());
+        assertEquals(1, ds.getDataSize());
     }
 }

@@ -63,21 +63,30 @@ public class Iobeam {
     /**
      * SendCallback used when autoRetry is set.
      */
-    private static final class ReinsertSendCallback extends SendCallback {
+    static final class ReinsertSendCallback extends SendCallback {
 
+        private final SendCallback userCB;
         private final Iobeam client;
 
-        public ReinsertSendCallback(Iobeam iobeam) {
+        public ReinsertSendCallback(Iobeam iobeam, SendCallback userCB) {
             this.client = iobeam;
+            this.userCB = userCB;
         }
 
         @Override
         public void onSuccess(ImportBatch data) {
+            if (userCB != null) {
+                userCB.onSuccess(data);
+            }
         }
 
         @Override
         public void onFailure(Throwable exc, ImportBatch data) {
             client.addBulkData(data);
+
+            if (userCB != null) {
+                userCB.onFailure(exc, data);
+            }
         }
     }
 
@@ -776,7 +785,7 @@ public class Iobeam {
         return true;
     }
 
-    private void addBulkData(ImportBatch data) {
+    private void addBulkData(final ImportBatch data) {
         if (data == null) {
             return;
         }
@@ -792,11 +801,8 @@ public class Iobeam {
                 db.merge(data.getData());
             }
         } else {
-            for (DataStore db : dataBatches) {
-                if (db.hasSameColumns(data.getData())) {
-                    db.merge(data.getData());
-                }
-            }
+            final DataStore ds = getDataStore(data.getData().getColumns());
+            ds.merge(data.getData());
         }
     }
 
@@ -959,7 +965,7 @@ public class Iobeam {
                 req.execute();
             } catch (Exception e) {
                 if (autoRetry) {
-                    ReinsertSendCallback cb = new ReinsertSendCallback(this);
+                    ReinsertSendCallback cb = new ReinsertSendCallback(this, null);
                     cb.innerCallback.failed(e, req);
                 }
 
@@ -1015,10 +1021,10 @@ public class Iobeam {
         for (ImportService.Submit req : reqs) {
             if (callback == null && !autoRetry) {
                 req.executeAsync();
-            } else if (callback == null) {
-                req.executeAsync(new ReinsertSendCallback(this).innerCallback);
-            } else {
+            } else if (callback != null && !autoRetry) {
                 req.executeAsync(callback.innerCallback);
+            } else {
+                req.executeAsync(new ReinsertSendCallback(this, callback).innerCallback);
             }
         }
     }
