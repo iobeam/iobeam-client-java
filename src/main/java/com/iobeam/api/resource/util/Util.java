@@ -20,7 +20,7 @@ public class Util {
             try {
                 final SimpleDateFormat ISO_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZZZZZ");
                 String newDateStr = dateStr.replace("Z", "+00:00");
-                newDateStr = newDateStr.substring(0, 22) + newDateStr.substring(23);
+                newDateStr = newDateStr.substring(0, 19) + newDateStr.substring(19).replace(":", "");
                 created = ISO_FORMAT.parse(newDateStr);
             } catch (Exception e2) {
                 throw e;
