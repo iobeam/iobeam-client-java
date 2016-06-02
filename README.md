@@ -51,7 +51,7 @@ If you are building an Android app, add the following lines to your `app/build.g
 
     dependencies {
         ...
-        compile('com.iobeam:iobeam-client-java:0.6.0') {
+        compile('com.iobeam:iobeam-client-java:0.6.1') {
             exclude module: 'json'
         }
     }
@@ -217,13 +217,12 @@ etc). `IOException` is thrown in the case of network connectivity issues.
 Here's the full source code for our example:
 ```java
 // Initialization
-try {
-    Iobeam iobeam = new Iobeam.Builder(PROJECT_ID, PROJECT_TOKEN).saveIdToPath(PATH).build();
+Iobeam iobeam = new Iobeam.Builder(PROJECT_ID, PROJECT_TOKEN)
+    .saveIdToPath(PATH)
+    .build();
 
-    if (iobeam.getDeviceId() == null)
-        iobeam.registerDeviceAsync(null); // Registers using auto-generated device_id
-} catch (ApiException e) {
-    e.printStackTrace();
+if (iobeam.getDeviceId() == null) {
+    iobeam.registerDeviceAsync(null); // Registers using auto-generated device_id
 }
 
 ...
@@ -240,10 +239,7 @@ store.add(columns, values);
 ...
 
 // Data transmission
-try {
-    iobeam.sendAsync();
-} catch (ApiException e) {
-    e.printStackTrace();
-}
+iobeam.sendAsync();
 ```
+
 These instructions should hopefully be enough to get you started with the library!

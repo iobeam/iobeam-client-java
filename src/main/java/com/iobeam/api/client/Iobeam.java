@@ -601,26 +601,23 @@ public class Iobeam {
      * @param device Desired device parameters to register.
      * @throws ApiException Thrown if the iobeam client is not initialized.
      */
-    public void registerDeviceAsync(Device device) throws ApiException {
+    public void registerDeviceAsync(Device device) {
         registerDeviceAsync(device, null);
     }
 
-    public void registerOrSetDeviceAsync(final Device device) throws ApiException {
+    public void registerOrSetDeviceAsync(final Device device) {
         registerDeviceAsync(device, new IgnoreDupeRegisterCallback(this, null));
     }
 
-    public void registerOrSetDeviceAsync(final Device device, RegisterCallback callback)
-        throws ApiException {
+    public void registerOrSetDeviceAsync(final Device device, RegisterCallback callback) {
         registerDeviceAsync(device, new IgnoreDupeRegisterCallback(this, callback));
     }
 
-    public void registerOrSetDeviceAsync(final String id)
-        throws ApiException {
+    public void registerOrSetDeviceAsync(final String id) {
         registerOrSetDeviceAsync(new Device.Builder(projectId).id(id).build());
     }
 
-    public void registerOrSetDeviceAsync(final String id, RegisterCallback callback)
-        throws ApiException {
+    public void registerOrSetDeviceAsync(final String id, RegisterCallback callback) {
         registerOrSetDeviceAsync(new Device.Builder(projectId).id(id).build(), callback);
     }
 
