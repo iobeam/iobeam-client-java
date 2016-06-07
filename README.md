@@ -207,10 +207,14 @@ You can send your data to iobeam in two ways: synchronously and asynchronously:
     iobeam.send(); // blocking
     iobeam.sendAsync(); // non-blocking
 
-If there are problems with the
-data as provided, an `ApiException` is thrown (e.g. incorrect project ID or device ID, invalid data,
-etc). `IOException` is thrown in the case of network connectivity issues.
+### Exceptions & Handling
 
+If there are problems with the data as provided to either `register()` or `send()` (and their
+async variants), an `ApiException` is thrown. These problems include unrecoverable issues like 
+incorrect project ID or device ID, invalid data,
+etc. `IOException` is thrown in the case of network connectivity issues. As a user of the library, 
+you should be aware of these errors and handle them appropriately (e.g. catching them, logging,
+etc.).
 
 ### Full Example
 
