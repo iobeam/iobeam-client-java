@@ -222,7 +222,7 @@ Iobeam iobeam = new Iobeam.Builder(PROJECT_ID, PROJECT_TOKEN)
     .build();
 
 if (iobeam.getDeviceId() == null) {
-    iobeam.registerDeviceAsync(null); // Registers using auto-generated device_id
+    iobeam.registerDeviceAsync(); // Registers using auto-generated device_id
 }
 
 ...
